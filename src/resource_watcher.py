@@ -6,7 +6,6 @@ def watch_resource(queue, namespace, api_call, api_watcher):
     logger.info('Initialized watcher.')
 
     for event in api_watcher.stream(api_call, namespace):
-        logger.info('got event %s', event)
         event_type = event['type']
 
         if event_type in ['ADDED', 'DELETED', 'MODIFIED']:
@@ -20,8 +19,7 @@ def watch_resource(queue, namespace, api_call, api_watcher):
                 'resourceName': obj.metadata.name,
             }
 
-            logger.info('%s %s %s %s', team, event_type, obj.kind, obj.metadata.name)
-
+            logger.info('%s %s %s %s', event_type, team, obj.kind, obj.metadata.name)
             queue.put(resource_updated_event)
 
     logger.info('stopped watcher')

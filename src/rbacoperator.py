@@ -12,7 +12,7 @@ from role import RoleManager
 
 logger = get_logger(__name__)
 
-if bool(os.environ.get('TEAM_DEV_MODE', False)):
+if bool(os.environ.get('DEV_MODE', False)):
     config.load_kube_config()
 
     import urllib3
@@ -24,7 +24,7 @@ else:
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
 
-    namespace = os.environ['APP_NAMESPACE']
+    namespace = os.environ['APP_ENVIRONMENT']
 
     resource_manager_control_queue, role_manager_control_queue, resources_inform_queue = Queue(), Queue(), Queue()
 
