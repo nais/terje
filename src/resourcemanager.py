@@ -6,7 +6,6 @@ from multiprocessing import Process, Queue
 from kubernetes import client, watch
 
 from logger import get_logger
-from resource_watcher import watch_resource
 
 logger = get_logger(__name__)
 
@@ -17,6 +16,14 @@ def defaultdict_of_set():
 
 def defaultdict_of_defaultdict_of_set():
     return defaultdict(defaultdict_of_set)
+
+
+def _safe_get_label(resource, label):
+    if resource.metadata.labels is not None and label in resource.metadata.labels.keys():
+        value = resource.metadata.labels[label]
+        if len(value) > 0:
+            return value
+    return None
 
 
 class ResourceManager(Process):
@@ -73,22 +80,41 @@ class ResourceManager(Process):
             # Second, re-add the resource to correct team.
             self.add_resource_name(team, kind, resource_name)
 
-    def run(self):
-        # Should be stopped by operator thread posting to control_queue instead.
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
+    @staticmethod
+    def create_resource_updated_event(event_type, team, kind, resource_name):
+        return {
+            'eventType': event_type,
+            'team': team,
+            'kind': kind,
+            'resourceName': resource_name,
+        }
 
-        logger.info('Running watchers')
+    def watch_resource(self, api_call, api_watcher):
+        logger.info('Initialized watcher.')
 
-        def watch_resource_in_process(api_call):
-            api_watcher = watch.Watch()
-            process = Process(target=watch_resource, args=[self.queue, self.namespace, api_call, api_watcher])
-            self.watchers.append((api_watcher, process))
-            process.start()
+        for event in api_watcher.stream(api_call, self.namespace):
+            event_type = event['type']
 
+            if event_type in ['ADDED', 'DELETED', 'MODIFIED']:
+                obj = event['object']
+                team = _safe_get_label(obj, 'team')
+
+                logger.info('%s %s %s %s', event_type, team, obj.kind, obj.metadata.name)
+                self.queue.put(self.create_resource_updated_event(event_type, team, obj.kind, obj.metadata.name))
+
+        logger.info('stopped watcher')
+
+    def run_watchers(self):
         core_api = client.CoreV1Api()
         apps_api = client.AppsV1Api()
         extensions_api = client.ExtensionsV1beta1Api()
         auto_scaling_api = client.AutoscalingV1Api()
+
+        def watch_resource_in_process(api_call):
+            api_watcher = watch.Watch()
+            process = Process(target=self.watch_resource, args=[api_call, api_watcher])
+            self.watchers.append((api_watcher, process))
+            process.start()
 
         watch_resource_in_process(core_api.list_namespaced_pod)
         watch_resource_in_process(core_api.list_namespaced_config_map)
@@ -102,6 +128,13 @@ class ResourceManager(Process):
         watch_resource_in_process(apps_api.list_namespaced_stateful_set)
         watch_resource_in_process(extensions_api.list_namespaced_ingress)
         watch_resource_in_process(auto_scaling_api.list_namespaced_horizontal_pod_autoscaler)
+
+    def run(self):
+        # Should be stopped by operator thread posting to control_queue instead.
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+        logger.info('Running watchers')
+        self.run_watchers()
 
         while True:
             if not self.control_queue.empty():

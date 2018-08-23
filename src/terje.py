@@ -3,11 +3,12 @@ import os
 import signal
 from multiprocessing import Queue
 
-from kubernetes import config
+from kubernetes import config, client
 
+from api_resources import get_api_resources
 from logger import get_logger
-from resource import ResourceManager
-from role import RoleManager
+from resourcemanager import ResourceManager
+from rolemanager import RoleManager
 
 logger = get_logger(__name__)
 
@@ -30,7 +31,8 @@ if __name__ == '__main__':
     resource_manager = ResourceManager(namespace, resource_manager_control_queue, resources_inform_queue)
     resource_manager.start()
 
-    role_manager = RoleManager(namespace, role_manager_control_queue, resources_inform_queue)
+    rbacapi = client.RbacAuthorizationV1Api()
+    role_manager = RoleManager(rbacapi, namespace, role_manager_control_queue, resources_inform_queue, get_api_resources())
     role_manager.start()
 
 
