@@ -1,0 +1,13 @@
+{
+  "name": "terje-js",
+  "license": "MIT",
+  "dependencies": {
+    "@kubernetes/client-node": "^0.5.3",
+    "typescript": "^3.0.1"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/terje.js",
+    "debug": "node --inspect dist/terje.js"
+  }
+}
