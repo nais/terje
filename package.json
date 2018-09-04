@@ -3,11 +3,32 @@
   "license": "MIT",
   "dependencies": {
     "@kubernetes/client-node": "^0.5.3",
+    "redux": "^4.0.0",
+    "redux-saga": "^0.16.0",
     "typescript": "^3.0.1"
   },
   "scripts": {
     "build": "tsc",
-    "start": "node dist/terje.js",
-    "debug": "node --inspect dist/terje.js"
+    "start": "node dist/app.js",
+    "debug": "node --inspect dist/app.js"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.3.1",
+    "jest": "^23.5.0",
+    "ts-jest": "^23.1.4"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
   }
 }
