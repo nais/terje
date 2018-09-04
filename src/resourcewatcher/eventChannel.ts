@@ -1,5 +1,5 @@
 import {buffers, END, eventChannel} from "redux-saga";
-import {resourceAdded, resourceDeleted} from "./actions";
+import {resourceAdded, resourceDeleted} from "./events";
 import {KubeConfig, Watch} from "@kubernetes/client-node";
 
 export function watchApiResources() {

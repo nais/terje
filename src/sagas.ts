@@ -1,8 +1,7 @@
-import {all, call, cancelled, put, select, take} from "redux-saga/effects";
-import {watchApiResources} from "./eventchannels";
-import {createOrUpdateRole, discardRole, fetchRole, getRole} from "./role/actions";
-import {onCreateOrUpdateRole, onFetchRole} from "./role/sagas";
-import {addResourceToRole, createRole} from "./role/rolecreator";
+import {all, call, cancelled, take} from "redux-saga/effects";
+import {watchApiResources} from "./resourcewatcher/eventChannel";
+import {addResourceToRole} from "./role/creator";
+import {fetchRole, replaceRole} from "./role/sagas";
 
 function* watchResourceEvents() {
     const resourceEventsChannel = yield call(watchApiResources);
@@ -10,34 +9,28 @@ function* watchResourceEvents() {
     try {
         while (true) {
             let event = yield take(resourceEventsChannel);
+            console.log("Saga got event for resource", event.metadata.name, "in namespace", event.metadata.namespace);
+
+            let resourceType = getResourceTypeFromSelfLink(event.metadata.selfLink);
             let team = getTeamFromMetadata(event.metadata.labels);
             if (!(team)) {
-                console.log("Empty team name label, skipping.");
+                console.log("Empty team name label, skipping");
                 continue
             }
-            let roleName = 'team-' + team;
-            let resourceType = getResourceTypeFromSelfLink(event.metadata.selfLink);
-            let resourceName = event.metadata.name;
 
-            console.log("Saga got event for resource", event.metadata.name , "in namespace", event.metadata.namespace);
-            yield put(fetchRole(roleName, event.metadata.namespace));
+            const role = yield call(fetchRole, 'team-' + team, event.metadata.namespace);
+            let [updatedRole, updated] = addResourceToRole(role, resourceType, event.metadata.name);
 
-            let role = yield select(getRole);
-            if (!(role)) {
-                role = createRole(team, event.metadata.namespace)
+            if (updated) {
+                yield call(replaceRole, updatedRole);
+            } else {
+                console.log("nothing changed in the role, skipping replace")
             }
-
-            let updatedRole = addResourceToRole(role, resourceType, resourceName);
-
-            yield put(createOrUpdateRole(updatedRole));
-
-            yield put(discardRole());
         }
     } finally {
-        yield put(discardRole());
         if (yield cancelled()) {
             resourceEventsChannel.close();
-            console.log('Metadata event channel cancelled.');
+            console.log('Metadata event channel cancelled');
         }
     }
 }
@@ -46,8 +39,6 @@ function* watchResourceEvents() {
 export default function* rootSaga() {
     yield all([
         watchResourceEvents(),
-        onFetchRole(),
-        onCreateOrUpdateRole(),
     ])
 }
 

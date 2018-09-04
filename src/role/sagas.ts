@@ -1,60 +1,45 @@
-import {
-    CREATE_OR_UPDATE_ROLE,
-    createOrUpdateRoleFailed,
-    createOrUpdateRoleSuccess,
-    FETCH_ROLE,
-    fetchRoleFailed,
-    saveFetchedRole
-} from "./actions";
-import {NamespacedResourceAction} from "../types";
-import {KubeConfig, RbacAuthorization_v1Api} from "@kubernetes/client-node";
-import {RbacApiRoleResponse, RoleAction} from "./types";
-import {call, put, takeLatest} from 'redux-saga/effects'
+import {KubeConfig, RbacAuthorization_v1Api, V1Role} from "@kubernetes/client-node";
+import {RbacApiRoleResponse} from "./types";
+import {call} from 'redux-saga/effects'
+import {createRole} from "./creator";
 
 
 const kubeConfig = new KubeConfig();
 kubeConfig.loadFromDefault();
 const rbacApi = kubeConfig.makeApiClient(RbacAuthorization_v1Api);
 
-export function* doFetchRole(action: NamespacedResourceAction) {
+export function* fetchRole(name: string, namespace: string) {
     try {
-        const response: RbacApiRoleResponse = yield call([rbacApi, rbacApi.readNamespacedRole], action.name, action.namespace);
+        const response: RbacApiRoleResponse =
+            yield call([rbacApi, rbacApi.readNamespacedRole], name, namespace);
         console.log("fetched role", response.body.metadata.name);
-        yield put(saveFetchedRole(response.body));
+
+        return response.body;
     } catch (e) {
         if (e.response.statusCode == 404) {
-            console.log("no existing role found for", action.name, "in namespace", action.namespace);
+            console.log("did not find  role ", name, "in namespace", namespace, " will create it.");
+            return createRole(name, namespace);
         } else {
             console.log("could not fetch role due to unhandled exception,", e);
+            return
         }
-
-        yield put(fetchRoleFailed(e));
-        return;
     }
 }
 
-export function* onFetchRole() {
-    yield takeLatest(FETCH_ROLE, doFetchRole);
-}
-
-export function* doCreateOrUpdateRole(action: RoleAction) {
+export function* replaceRole(role: V1Role) {
     try {
-        const response: RbacApiRoleResponse = yield call([rbacApi, rbacApi.replaceNamespacedRole], action.role.metadata.name, action.role.metadata.namespace, action.role);
-        const statusCode: number = response.response.statusCode;
-        if (statusCode >= 200 && statusCode < 300) {
-            console.log("successfully replaced role", action.role.metadata.name);
-            yield put(createOrUpdateRoleSuccess(response.body));
+        const response: RbacApiRoleResponse =
+            yield call([rbacApi, rbacApi.replaceNamespacedRole], role.metadata.name, role.metadata.namespace, role);
+
+        if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
+            console.log("successfully replaced role", role.metadata.name);
+            return true;
         } else {
             console.log("failed to replace role", response.response.statusMessage);
-            yield put(createOrUpdateRoleFailed(response.response.statusMessage));
         }
     } catch (e) {
         console.log("caught exception while replacing role ", e);
-        yield put(createOrUpdateRoleFailed(e));
-        return;
     }
-}
 
-export function* onCreateOrUpdateRole() {
-    yield takeLatest(CREATE_OR_UPDATE_ROLE, doCreateOrUpdateRole);
+    return false;
 }

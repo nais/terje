@@ -1,10 +1,9 @@
 import {ResourceMetadataAction} from "./types";
 import {V1ObjectMeta} from "@kubernetes/client-node";
 
-const BASE="EVENT";
-export const EVENT_RESOURCE_ADDED = `${BASE}/RESOURCE_ADDED`;
-export const EVENT_RESOURCE_DELETED = `${BASE}/RESOURCE_DELETED`;
-export const EVENT_RESOURCE_MODIFIED = `${BASE}/RESOURCE_MODIFIED`;
+export const EVENT_RESOURCE_ADDED = 'RESOURCE_ADDED';
+export const EVENT_RESOURCE_DELETED = 'RESOURCE_DELETED';
+export const EVENT_RESOURCE_MODIFIED = 'RESOURCE_MODIFIED';
 
 export function resourceAdded(metadata: V1ObjectMeta): ResourceMetadataAction {
     return {
