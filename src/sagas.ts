@@ -19,15 +19,18 @@ function* watchResourceEvents() {
             let resourceType = getResourceTypeFromSelfLink(event.metadata.selfLink);
             let resourceName = event.metadata.name;
 
-            console.log("Saga take:", event);
-
+            console.log("Saga got event for resource", event.metadata.name , "in namespace", event.metadata.namespace);
             yield put(fetchRole(roleName, event.metadata.namespace));
+
             let role = yield select(getRole);
             if (!(role)) {
                 role = createRole(team, event.metadata.namespace)
             }
+
             let updatedRole = addResourceToRole(role, resourceType, resourceName);
+
             yield put(createOrUpdateRole(updatedRole));
+
             yield put(discardRole());
         }
     } finally {

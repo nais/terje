@@ -8,12 +8,16 @@ import {
     saveFetchedRole
 } from "./actions";
 import {createRole} from "./rolecreator";
-import {RbacAuthorization_v1Api} from "@kubernetes/client-node";
+import {KubeConfig, RbacAuthorization_v1Api} from "@kubernetes/client-node";
 
 const team = 'unittest';
 const roleName = `team-${team}`;
 const namespace = 'namespace';
 const role = createRole(team, namespace);
+
+const kubeConfig = new KubeConfig();
+kubeConfig.loadFromDefault();
+const rbacApi = kubeConfig.makeApiClient(RbacAuthorization_v1Api);
 
 test('test fetch role saga', () => {
     const fetchRoleAction = fetchRole(roleName, namespace);
@@ -21,7 +25,7 @@ test('test fetch role saga', () => {
 
     const gen = doFetchRole(fetchRoleAction);
     expect(gen.next().value).toEqual(
-        call(RbacAuthorization_v1Api.prototype.readNamespacedRole, roleName, namespace)
+        call([rbacApi, rbacApi.readNamespacedRole], roleName, namespace)
     );
 
     expect(gen.next(mockRoleResponse).value).toEqual(
@@ -42,7 +46,7 @@ test('test create or update role saga', () => {
 
     const gen = doCreateOrUpdateRole(createOrUpdateRoleAction);
     expect(gen.next().value).toEqual(
-        call(RbacAuthorization_v1Api.prototype.replaceNamespacedRole, roleName, namespace, role)
+        call([rbacApi, rbacApi.replaceNamespacedRole], roleName, namespace, role)
     );
 
     expect(gen.next(mockRoleResponse).value).toEqual(
@@ -63,7 +67,7 @@ test('test create or update role saga error handling', () => {
 
     const gen = doCreateOrUpdateRole(createOrUpdateRoleAction);
     expect(gen.next().value).toEqual(
-        call(RbacAuthorization_v1Api.prototype.replaceNamespacedRole, roleName, namespace, role)
+        call([rbacApi, rbacApi.replaceNamespacedRole], roleName, namespace, role)
     );
 
     expect(gen.next(mockRoleResponse).value).toEqual(

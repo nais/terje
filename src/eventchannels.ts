@@ -18,11 +18,10 @@ export function watchApiResources() {
         "/apis/autoscaling/v1/horizontalpodautoscalers",
     ];
 
-    let kubeConfig = new KubeConfig();
-    kubeConfig.loadFromDefault();
-    //kubeConfig.loadFromCluster();
-
     return eventChannel(emitter => {
+            let kubeConfig = new KubeConfig();
+            kubeConfig.loadFromDefault();
+
             let watch = new Watch(kubeConfig);
 
             let watchers = apis.map(api => {
