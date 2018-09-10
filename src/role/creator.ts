@@ -1,9 +1,9 @@
-import {V1ObjectMeta, V1PolicyRule, V1Role} from "@kubernetes/client-node";
+import {V1ObjectMeta, V1PolicyRule, V1Role} from '@kubernetes/client-node';
 
 function createInitialPolicyRule(resourceType: string, resourceName: string): V1PolicyRule {
     let rule: V1PolicyRule = new V1PolicyRule();
 
-    rule.apiGroups = ["*"];
+    rule.apiGroups = ['*'];
     rule.verbs = ['*'];
     rule.resources = [resourceType];
     rule.resourceNames = [resourceName];
@@ -11,11 +11,11 @@ function createInitialPolicyRule(resourceType: string, resourceName: string): V1
     return rule;
 }
 
-export function addResourceToRole(role: V1Role, resourceType: string, resourceName: string): [V1Role, boolean] {
+export function addResourceToRole(role: V1Role, resourceType: string, resourceName: string): V1Role {
     // If no rules exist at all in the role.
     if (!(role.rules)) {
         role.rules = [createInitialPolicyRule(resourceType, resourceName)];
-        return [role, true];
+        return role;
     }
 
     // If the resourceType is already present, just add the resource name to the list
@@ -23,17 +23,17 @@ export function addResourceToRole(role: V1Role, resourceType: string, resourceNa
         if (role.rules[i].resources.indexOf(resourceType) > -1) {
             // Already exists
             if (role.rules[i].resourceNames.indexOf(resourceName) > -1) {
-                return [role, false];
+                return role;
             } else {
                 role.rules[i].resourceNames.push(resourceName);
-                return [role, true];
+                return role;
             }
         }
     }
 
     // If above for loop did not exit, that means this resource type is new for this role and the role already has other rules. Add new rule.
     role.rules.push(createInitialPolicyRule(resourceType, resourceName));
-    return [ensureManagedByTerje(role), true];
+    return ensureManagedByTerje(role)
 }
 
 export function createRole(name: string, namespace: string): V1Role {
@@ -52,6 +52,22 @@ export function ensureManagedByTerje(role: V1Role): V1Role {
     } else {
         role.metadata.labels["managed-by"] = "Terje";
     }
+
+    return role;
+}
+
+// I MORRA: TEST
+export function removeResourceFromRole(role: V1Role, resourceType: string, resourceName: string): V1Role {
+    role.rules = role.rules.map((policyRule) => {
+        if (policyRule.resources.indexOf(resourceType) > -1) {
+            policyRule.resourceNames = policyRule.resourceNames.filter((n) => (n !== resourceName));
+            return policyRule
+        } else {
+            return policyRule
+        }
+    }).filter((policyRule) => {
+        return (policyRule.resourceNames.length > 0)
+    });
 
     return role;
 }

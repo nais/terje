@@ -1,7 +1,44 @@
 import {all, call, cancelled, take} from "redux-saga/effects";
 import {watchApiResources} from "./resourcewatcher/eventChannel";
-import {addResourceToRole} from "./role/creator";
+import {addResourceToRole, removeResourceFromRole} from "./role/creator";
 import {fetchRole, replaceRole} from "./role/sagas";
+import {EVENT_RESOURCE_ADDED, EVENT_RESOURCE_DELETED, EVENT_RESOURCE_MODIFIED} from "./resourcewatcher/events";
+import {V1ObjectMeta, V1Role} from "@kubernetes/client-node";
+import {notDeepStrictEqual} from "assert";
+
+export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMeta }) {
+    console.log("Saga got event for resource", event.metadata.name, "in namespace", event.metadata.namespace);
+
+    let resourceType = getResourceTypeFromSelfLink(event.metadata.selfLink);
+    let team = getTeamFromMetadata(event.metadata.labels);
+    if (!(team)) {
+        console.log("Empty team name label, skipping");
+        return
+    }
+
+    const role = yield call(fetchRole, 'team-' + team, event.metadata.namespace);
+
+    let updatedRole: V1Role = undefined;
+
+    switch (event.type) {
+        case EVENT_RESOURCE_ADDED:
+            updatedRole = addResourceToRole(role, resourceType, event.metadata.name);
+            break;
+        case EVENT_RESOURCE_DELETED:
+            updatedRole = removeResourceFromRole(role, resourceType, event.metadata.name);
+            break;
+        case EVENT_RESOURCE_MODIFIED:
+            updatedRole = addResourceToRole(role, resourceType, event.metadata.name);
+            // remove resource from other roles
+            break;
+        default:
+            console.log('invalid event type:', event);
+            return;
+
+    }
+
+    yield call(replaceRole, updatedRole);
+}
 
 function* watchResourceEvents() {
     const resourceEventsChannel = yield call(watchApiResources);
@@ -9,23 +46,7 @@ function* watchResourceEvents() {
     try {
         while (true) {
             let event = yield take(resourceEventsChannel);
-            console.log("Saga got event for resource", event.metadata.name, "in namespace", event.metadata.namespace);
-
-            let resourceType = getResourceTypeFromSelfLink(event.metadata.selfLink);
-            let team = getTeamFromMetadata(event.metadata.labels);
-            if (!(team)) {
-                console.log("Empty team name label, skipping");
-                continue
-            }
-
-            const role = yield call(fetchRole, 'team-' + team, event.metadata.namespace);
-            let [updatedRole, updated] = addResourceToRole(role, resourceType, event.metadata.name);
-
-            if (updated) {
-                yield call(replaceRole, updatedRole);
-            } else {
-                console.log("nothing changed in the role, skipping replace")
-            }
+            handleResourceEvent(event);
         }
     } finally {
         if (yield cancelled()) {

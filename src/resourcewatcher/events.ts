@@ -1,5 +1,5 @@
-import {ResourceMetadataAction} from "./types";
-import {V1ObjectMeta} from "@kubernetes/client-node";
+import {ResourceMetadataAction} from './types';
+import {V1ObjectMeta} from '@kubernetes/client-node';
 
 export const EVENT_RESOURCE_ADDED = 'RESOURCE_ADDED';
 export const EVENT_RESOURCE_DELETED = 'RESOURCE_DELETED';

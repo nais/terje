@@ -1,5 +1,5 @@
-import {fetchRole, replaceRole} from "./sagas";
-import {call} from "redux-saga/effects";
+import {fetchRole, replaceRole} from './sagas';
+import {call} from 'redux-saga/effects';
 import {createRole} from "./creator";
 import {KubeConfig, RbacAuthorization_v1Api} from "@kubernetes/client-node";
 
