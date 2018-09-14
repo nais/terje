@@ -13,11 +13,12 @@
   "scripts": {
     "build": "tsc",
     "start": "node ./build/app.js",
+    "test": "jest",
     "debug": "node --inspect ./build/app.js",
     "clean": "rm -rf ./build && mkdir ./build",
     "current-version": "node -p -e 'require(\"./package.json\").version'",
     "build-image": "docker build -t navikt/terje:$(npm -s run current-version) .",
-    "push": "docker push navikt/terje:$(npm -s run current-version)"
+    "push-image": "docker push navikt/terje:$(npm -s run current-version)"
   },
   "devDependencies": {
     "@types/jest": "^23.3.1",
