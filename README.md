@@ -14,6 +14,6 @@ Operator that creates RBAC rules based on kubernetes resource labels
 `npm build` creates the dist folder with transpiled typescript -> javascript
 
 ### Release
-`npm version --non-interactive --[patch,minor,major]`
-`npm build-image`
-`npm push`
+`npm version [patch,minor,major]`
+`npm run build-image`
+`npm run push`
