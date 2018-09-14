@@ -1,18 +1,18 @@
 FROM node:10-alpine as builder
+WORKDIR /home/node/app
 
-WORKDIR /build/
-
-ADD ./package.json /build/
-RUN yarn
-
-ADD ./src /build/src
-ADD ./tsconfig.json /build/
-
-RUN yarn build
-RUN yarn jest
+COPY . ./
+RUN npm install && npm run build
 
 FROM node:10-alpine
+ENV NODE_ENV=production
+WORKDIR /home/node/app
 
-COPY --from=builder /build/dist /app/
+COPY ./package* ./
+RUN npm install && \
+    npm cache clean --force
 
-CMD ["node", "/app/app.js"]
+COPY --from=builder /home/node/app/build/ ./build/
+
+
+CMD npm start

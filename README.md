@@ -2,16 +2,18 @@
 Operator that creates RBAC rules based on kubernetes resource labels
 
 ### Run
-`yarn run`
+`npm run` runs Terje
 
 ### Debug
-`yarn debug`
+`npm debug` runs with node --inspect whick makes it possible to connect a debugger to the node
 
 ### Test
-`yarn jest`
+`npm jest` runs the tests
 
 ### Build
-`yarn build`
+`npm build` creates the dist folder with transpiled typescript -> javascript
 
 ### Release
-`yarn version --non-interactive --[patch,minor,major]`
+`npm version --non-interactive --[patch,minor,major]`
+`npm build-image`
+`npm push`

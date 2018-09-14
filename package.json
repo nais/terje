@@ -1,6 +1,7 @@
 {
   "name": "terje-js",
   "version": "0.0.2",
+  "repository": "github.com/navikt/terje",
   "license": "MIT",
   "dependencies": {
     "@kubernetes/client-node": "^0.5.3",
@@ -11,11 +12,12 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "node dist/app.js",
-    "debug": "node --inspect dist/app.js",
+    "start": "node ./build/app.js",
+    "debug": "node --inspect ./build/app.js",
+    "clean": "rm -rf ./build && mkdir ./build",
     "current-version": "node -p -e 'require(\"./package.json\").version'",
-    "build-image": "docker build -t navikt/terje:$(yarn -s run current-version) .",
-    "push": "docker push navikt/terje:$(yarn -s run current-version)"
+    "build-image": "docker build -t navikt/terje:$(npm -s run current-version) .",
+    "push": "docker push navikt/terje:$(npm -s run current-version)"
   },
   "devDependencies": {
     "@types/jest": "^23.3.1",
