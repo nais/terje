@@ -10,12 +10,12 @@ import parentLogger from "./logger";
 const logger = parentLogger.child({module: 'main'});
 
 export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMeta }) {
-    logger.log("Saga got event for resource", event.metadata.name, "in namespace", event.metadata.namespace);
+    logger.info("Saga got event for resource", event.metadata.name, "in namespace", event.metadata.namespace);
 
     let resourceType = getResourceTypeFromSelfLink(event.metadata.selfLink);
     let team = getTeamFromMetadata(event.metadata.labels);
     if (!(team)) {
-        logger.log("Empty team name label, skipping");
+        logger.info("Empty team name label, skipping");
         return
     }
 
@@ -35,7 +35,7 @@ export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMe
             // remove resource from other roles
             break;
         default:
-            logger.log('invalid event type:', event);
+            logger.info('invalid event type:', event);
             return;
 
     }
@@ -49,12 +49,12 @@ function* watchResourceEvents() {
     try {
         while (true) {
             let event = yield take(resourceEventsChannel);
-            handleResourceEvent(event);
+            yield handleResourceEvent(event);
         }
     } finally {
         if (yield cancelled()) {
             resourceEventsChannel.close();
-            logger.log('Metadata event channel cancelled');
+            logger.info('Metadata event channel cancelled');
         }
     }
 }

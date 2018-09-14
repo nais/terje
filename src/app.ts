@@ -7,11 +7,15 @@ import parentLogger from "./logger";
 const logger = parentLogger.child({module: 'main'});
 
 const sagaMiddleware = createSagaMiddleware();
+
 createStore(
-    combineReducers(() => {
+    combineReducers({
+        asd: (state: {} = {}) => {
+            return state
+        }
     }),
     applyMiddleware(sagaMiddleware)
 );
 
-
 sagaMiddleware.run(rootSaga);
+logger.info('Terje started.');

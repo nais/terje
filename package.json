@@ -12,26 +12,30 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/app.js",
-    "debug": "node --inspect dist/app.js"
+    "debug": "node --inspect dist/app.js",
+    "current-version": "node -p -e 'require(\"./package.json\").version'",
+    "build-image": "docker build -t navikt/terje:$(yarn -s run current-version) .",
+    "push": "docker push navikt/terje:$(yarn -s run current-version)"
   },
   "devDependencies": {
     "@types/jest": "^23.3.1",
     "@types/pino": "^5.20.0",
+    "babel-core": "^6.26.3",
+    "babel-jest": "^23.6.0",
     "jest": "^23.5.0",
     "ts-jest": "^23.1.4"
   },
   "jest": {
     "transform": {
-      "^.+\\.tsx?$": "ts-jest"
+      "^.+\\.ts$": "ts-jest"
     },
-    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.ts$",
     "moduleFileExtensions": [
       "ts",
       "tsx",
       "js",
       "jsx",
-      "json",
-      "node"
+      "json"
     ]
   }
 }

@@ -1,17 +1,17 @@
 # TERJE (Tremendously Effortless Rbac-Joiner Extension)
 Operator that creates RBAC rules based on kubernetes resource labels
 
-# Run
+### Run
 `yarn run`
 
-# Debug
+### Debug
 `yarn debug`
 
-# Test
+### Test
 `yarn jest`
 
-# Build
+### Build
 `yarn build`
 
-# Docker image
-`docker build -t terje:$(bash bump.sh) .`
+### Release
+`yarn version --non-interactive --[patch,minor,major]`
