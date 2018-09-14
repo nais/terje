@@ -4,15 +4,18 @@ import {addResourceToRole, removeResourceFromRole} from "./role/creator";
 import {fetchRole, replaceRole} from "./role/sagas";
 import {EVENT_RESOURCE_ADDED, EVENT_RESOURCE_DELETED, EVENT_RESOURCE_MODIFIED} from "./resourcewatcher/events";
 import {V1ObjectMeta, V1Role} from "@kubernetes/client-node";
-import {notDeepStrictEqual} from "assert";
+
+import parentLogger from "./logger";
+
+const logger = parentLogger.child({module: 'main'});
 
 export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMeta }) {
-    console.log("Saga got event for resource", event.metadata.name, "in namespace", event.metadata.namespace);
+    logger.log("Saga got event for resource", event.metadata.name, "in namespace", event.metadata.namespace);
 
     let resourceType = getResourceTypeFromSelfLink(event.metadata.selfLink);
     let team = getTeamFromMetadata(event.metadata.labels);
     if (!(team)) {
-        console.log("Empty team name label, skipping");
+        logger.log("Empty team name label, skipping");
         return
     }
 
@@ -32,7 +35,7 @@ export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMe
             // remove resource from other roles
             break;
         default:
-            console.log('invalid event type:', event);
+            logger.log('invalid event type:', event);
             return;
 
     }
@@ -51,7 +54,7 @@ function* watchResourceEvents() {
     } finally {
         if (yield cancelled()) {
             resourceEventsChannel.close();
-            console.log('Metadata event channel cancelled');
+            logger.log('Metadata event channel cancelled');
         }
     }
 }

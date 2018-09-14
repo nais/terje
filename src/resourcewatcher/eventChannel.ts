@@ -2,6 +2,10 @@ import {buffers, END, eventChannel} from "redux-saga";
 import {resourceAdded, resourceDeleted} from "./events";
 import {KubeConfig, Watch} from "@kubernetes/client-node";
 
+import parentLogger from "../logger";
+
+const logger = parentLogger.child({module: 'resourcewatcher'});
+
 export function watchApiResources() {
     let apis = [
         "/api/v1/pods",
@@ -41,7 +45,7 @@ export function watchApiResources() {
                     (err: any) => {
                         emitter(END);
                         if (err) {
-                            console.log(err);
+                            logger.warn(err);
                         }
                     });
             });

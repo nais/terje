@@ -3,6 +3,9 @@ import {RbacApiRoleResponse} from './types';
 import {call} from 'redux-saga/effects'
 import {createRole} from './creator';
 
+import parentLogger from "../logger";
+
+const logger = parentLogger.child({module: 'role'});
 
 const kubeConfig = new KubeConfig();
 kubeConfig.loadFromDefault();

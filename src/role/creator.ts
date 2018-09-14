@@ -1,5 +1,9 @@
 import {V1ObjectMeta, V1PolicyRule, V1Role} from '@kubernetes/client-node';
 
+import parentLogger from "../logger";
+
+const logger = parentLogger.child({module: 'role'});
+
 function createInitialPolicyRule(resourceType: string, resourceName: string): V1PolicyRule {
     let rule: V1PolicyRule = new V1PolicyRule();
 
@@ -56,7 +60,6 @@ export function ensureManagedByTerje(role: V1Role): V1Role {
     return role;
 }
 
-// I MORRA: TEST
 export function removeResourceFromRole(role: V1Role, resourceType: string, resourceName: string): V1Role {
     role.rules = role.rules.map((policyRule) => {
         if (policyRule.resources.indexOf(resourceType) > -1) {
