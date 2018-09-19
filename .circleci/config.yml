@@ -1,0 +1,55 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/terje
+    docker:
+      - image: circleci/node:10-stretch
+    steps:
+      - checkout
+      - setup_remote_docker
+      - restore_cache: # special step to restore the dependency cache 
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: Install npm packages
+          command: npm install
+      - save_cache: # special step to save the dependency cache
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: Run unit tests
+          command: npm test
+      - restore_cache:
+          keys:
+            - v1-{{ .Branch }}
+          paths:
+            - /caches/app.tar
+      - run:
+          name: Load Docker image layer cache
+          command: |
+            set +o pipefail
+            docker load -i /caches/app.tar | true
+      - run:
+          name: Build application Docker image
+          command: |
+            docker build --cache-from=app -t app .
+      - run:
+          name: Save Docker image layer cache
+          command: |
+            mkdir -p /caches
+            docker save -o /caches/app.tar app
+      - save_cache:
+          key: v1-{{ .Branch }}-{{ epoch }}
+          paths:
+            - /caches/app.tar
+      - deploy:
+          name: Push application Docker image
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              git_tag=$(git describe --tags)
+              echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USER}" --password-stdin
+              docker tag app "navikt/terje:${CIRCLE_SHA1}"
+              docker push "navikt/terje:${CIRCLE_SHA1}"
+              docker tag app "navikt/terje:${git_tag}"
+              docker push "navikt/terje:${git_tag}"
+            fi
