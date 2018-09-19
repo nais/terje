@@ -2,7 +2,7 @@ FROM node:10-alpine as builder
 WORKDIR /home/node/app
 
 COPY . ./
-RUN npm install && npm run build
+RUN npm install && npm run build && npm test
 
 FROM node:10-alpine
 ENV NODE_ENV=production
