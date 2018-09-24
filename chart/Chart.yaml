@@ -1,0 +1,4 @@
+apiVersion: v1
+description: Operator that creates RBAC rules based on kubernetes resource labels
+name: terje
+version: 1.0.0
