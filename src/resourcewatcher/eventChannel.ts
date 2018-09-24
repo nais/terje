@@ -25,6 +25,7 @@ export function watchApiResources() {
     return eventChannel(emitter => {
             let kubeConfig = new KubeConfig();
             kubeConfig.loadFromDefault();
+            logger.info(kubeConfig);
 
             let watch = new Watch(kubeConfig);
 

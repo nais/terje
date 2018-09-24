@@ -3,6 +3,10 @@ import {call} from 'redux-saga/effects';
 import {createRole} from "./creator";
 import {KubeConfig, RbacAuthorization_v1Api} from "@kubernetes/client-node";
 
+import parentLogger from "../logger";
+
+const logger = parentLogger.child({module: 'resourcewatcher'});
+
 const team = 'unittest';
 const roleName = `team-${team}`;
 const namespace = 'namespace';
@@ -10,6 +14,7 @@ const role = createRole(roleName, namespace);
 
 const kubeConfig = new KubeConfig();
 kubeConfig.loadFromDefault();
+logger.info(kubeConfig);
 const rbacApi = kubeConfig.makeApiClient(RbacAuthorization_v1Api);
 
 test('test fetch role saga', () => {

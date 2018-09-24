@@ -9,6 +9,7 @@ const logger = parentLogger.child({module: 'role'});
 
 const kubeConfig = new KubeConfig();
 kubeConfig.loadFromDefault();
+logger.info(kubeConfig);
 const rbacApi = kubeConfig.makeApiClient(RbacAuthorization_v1Api);
 
 export function* fetchRole(name: string, namespace: string) {
