@@ -10,14 +10,14 @@ jobs:
       - restore_cache: # special step to restore the dependency cache 
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: Install npm packages
+          name: npm install
           command: npm install
       - save_cache: # special step to save the dependency cache
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - run:
-          name: Run unit tests
+          name: npm test
           command: npm test
       - restore_cache:
           keys:
@@ -25,16 +25,16 @@ jobs:
           paths:
             - ~/caches/app.tar
       - run:
-          name: Load Docker image layer cache
+          name: docker load cache
           command: |
             set +o pipefail
             docker load -i ~/caches/app.tar | true
       - run:
-          name: Build application Docker image
+          name: docker build
           command: |
             docker build --cache-from=app -t app .
       - run:
-          name: Save Docker image layer cache
+          name: docker save cache
           command: |
             mkdir -p ~/caches
             docker save -o ~/caches/app.tar app
@@ -43,7 +43,7 @@ jobs:
           paths:
             - ~/caches/app.tar
       - deploy:
-          name: Push application Docker image
+          name: docker push
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               git_tag=$(git describe --tags)
