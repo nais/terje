@@ -7,12 +7,13 @@ npm start
 npm test
 npm run build
 npm run debug
+npm run clean
 ```
 
-### Release
+### Trigger release
+This will trigger an automated docker hub build
 ```
 npm version [patch,minor,major]
-npm run build-image
-npm run push-image
+git push --tags
 ```
 
