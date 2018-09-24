@@ -4,21 +4,19 @@
   "repository": "github.com/navikt/terje",
   "license": "MIT",
   "dependencies": {
-    "@kubernetes/client-node": "^0.5.3",
-    "pino": "^5.5.0",
+    "@kubernetes/client-node": "^0.6.0",
+    "pino": "^5.6.1",
     "redux": "^4.0.0",
     "redux-saga": "^0.16.0",
     "typescript": "^3.0.1"
   },
   "scripts": {
-    "build": "tsc",
     "start": "node ./build/app.js",
-    "test": "jest",
     "debug": "node --inspect ./build/app.js",
+    "build": "tsc",
+    "test": "jest",
     "clean": "rm -rf ./build && mkdir ./build",
-    "current-version": "node -p -e 'require(\"./package.json\").version'",
-    "build-image": "docker build -t navikt/terje:$(npm -s run current-version) .",
-    "push-image": "docker push navikt/terje:$(npm -s run current-version)"
+    "build-image": "docker build -t navikt/terje:local ."
   },
   "devDependencies": {
     "@types/jest": "^23.3.1",
@@ -26,7 +24,7 @@
     "babel-core": "^6.26.3",
     "babel-jest": "^23.6.0",
     "jest": "^23.5.0",
-    "ts-jest": "^23.1.4"
+    "ts-jest": "^23.10.1"
   },
   "jest": {
     "transform": {
