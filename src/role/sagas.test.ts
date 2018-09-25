@@ -5,7 +5,7 @@ import {KubeConfig, RbacAuthorization_v1Api} from "@kubernetes/client-node";
 
 import parentLogger from "../logger";
 
-const logger = parentLogger.child({module: 'resourcewatcher'});
+const logger = parentLogger.child({module: 'sagas.test'});
 
 const team = 'unittest';
 const roleName = `team-${team}`;

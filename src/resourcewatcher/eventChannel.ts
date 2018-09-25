@@ -38,8 +38,6 @@ export function watchApiResources() {
                                 return emitter(resourceAdded(obj.metadata));
                             case 'DELETED':
                                 return emitter(resourceDeleted(obj.metadata.name));
-                            /*case 'DELETED':
-                                return emitter(resourceModified(obj.metadata))*/
                         }
                     },
 
