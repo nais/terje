@@ -11,7 +11,7 @@
     "typescript": "^3.0.1"
   },
   "scripts": {
-    "start": "node ./build/app.js",
+    "start": "node --max_old_space_size=196 ./build/app.js",
     "debug": "node --inspect ./build/app.js",
     "build": "tsc",
     "test": "jest",
