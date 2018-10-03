@@ -1,9 +1,5 @@
 import {V1ObjectMeta, V1PolicyRule, V1Role} from '@kubernetes/client-node';
 
-import parentLogger from "../logger";
-
-const logger = parentLogger.child({module: 'role'});
-
 function createInitialPolicyRule(resourceType: string, resourceName: string): V1PolicyRule {
     let rule: V1PolicyRule = new V1PolicyRule();
 

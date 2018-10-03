@@ -14,7 +14,6 @@ const role = createRole(roleName, namespace);
 
 const kubeConfig = new KubeConfig();
 kubeConfig.loadFromDefault();
-logger.info(kubeConfig);
 const rbacApi = kubeConfig.makeApiClient(RbacAuthorization_v1Api);
 
 test('test fetch role saga', () => {

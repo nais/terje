@@ -25,7 +25,7 @@ export function watchApiResources() {
     return eventChannel(emitter => {
             let kubeConfig = new KubeConfig();
             kubeConfig.loadFromDefault();
-            logger.info(kubeConfig);
+            logger.debug(kubeConfig);
 
             let watch = new Watch(kubeConfig);
 
@@ -33,6 +33,7 @@ export function watchApiResources() {
                 return watch.watch(api,
                     {"labelSelector": "team"},
                     (type: string, obj: any) => {
+                        logger.debug("type:", type, "obj:", obj);
                         switch (type) {
                             case 'ADDED':
                                 return emitter(resourceAdded(obj.metadata));
