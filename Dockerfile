@@ -18,5 +18,5 @@ COPY ./package* ./
 COPY --from=builder /home/node/app/node_modules/ ./node_modules/
 COPY --from=builder /home/node/app/build/ ./build/
 
-
+USER node
 CMD npm start
