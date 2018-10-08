@@ -17,13 +17,13 @@ test('test resource create event leads to fetchRole and replaceRole sagas', () =
         metadata: metadata
     };
 
-    const mockRoleResponse = createRole('team-aura', metadata.namespace);
+    const mockRoleResponse = createRole('nais:team:aura', metadata.namespace);
     addResourceToRole(mockRoleResponse, 'pods', metadata.name);
 
     const gen = handleResourceEvent(event);
 
     expect(gen.next().value).toEqual(
-        call(fetchRole, 'team-' + metadata.labels['team'], metadata.namespace)
+        call(fetchRole, 'nais:team:' + metadata.labels['team'], metadata.namespace)
     );
 
     expect(gen.next(mockRoleResponse).value).toEqual(
@@ -40,7 +40,7 @@ test('test resource deleted event leads to fetchRole and replaceRole sagas', () 
     metadata.labels = {'team': 'aura'};
     metadata.selfLink = '/api/v1/namespaces/aura/pods/debug-68cffcddb-vrstj';
 
-    const mockRoleResponse = createRole('team-aura', metadata.namespace);
+    const mockRoleResponse = createRole('nais:team:aura', metadata.namespace);
     addResourceToRole(mockRoleResponse, 'pods', metadata.name);
 
     const event = {
@@ -51,7 +51,7 @@ test('test resource deleted event leads to fetchRole and replaceRole sagas', () 
     const gen = handleResourceEvent(event);
 
     expect(gen.next().value).toEqual(
-        call(fetchRole, 'team-' + metadata.labels['team'], metadata.namespace)
+        call(fetchRole, 'nais:team:' + metadata.labels['team'], metadata.namespace)
     );
 
     expect(gen.next(mockRoleResponse).value).toEqual(

@@ -2,7 +2,7 @@ import {addResourceToRole, createRole, removeResourceFromRole} from './creator';
 import {V1Role} from '@kubernetes/client-node';
 
 const team = 'unittest';
-const roleName = `team-${team}`;
+const roleName = `nais:team:${team}`;
 const namespace = 'namespace';
 
 test('test created role has correct metadata', () => {

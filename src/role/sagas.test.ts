@@ -8,7 +8,7 @@ import parentLogger from "../logger";
 const logger = parentLogger.child({module: 'sagas.test'});
 
 const team = 'unittest';
-const roleName = `team-${team}`;
+const roleName = `nais:team:${team}`;
 const namespace = 'namespace';
 const role = createRole(roleName, namespace);
 

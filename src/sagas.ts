@@ -19,7 +19,7 @@ export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMe
         return
     }
 
-    const role = yield call(fetchRole, 'team-' + team, event.metadata.namespace);
+    const role = yield call(fetchRole, 'nais:team:' + team, event.metadata.namespace);
 
     let updatedRole: V1Role = undefined;
 
