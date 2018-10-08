@@ -1,6 +1,6 @@
 import {all, call, cancelled, take} from "redux-saga/effects";
 import {watchApiResources} from "./resourcewatcher/eventChannel";
-import {addResourceToRole, removeResourceFromRole} from "./role/creator";
+import {addResourceToRole, removeResourceFromRole} from "./role/rolecreator";
 import {fetchRole, replaceRole} from "./role/sagas";
 import {EVENT_RESOURCE_ADDED, EVENT_RESOURCE_DELETED, EVENT_RESOURCE_MODIFIED} from "./resourcewatcher/events";
 import {V1ObjectMeta, V1Role} from "@kubernetes/client-node";
@@ -48,8 +48,12 @@ function* watchResourceEvents() {
 
     try {
         while (true) {
-            let event = yield take(resourceEventsChannel);
-            yield handleResourceEvent(event);
+            try {
+                let event = yield take(resourceEventsChannel);
+                yield handleResourceEvent(event);
+            } catch (e) {
+                logger.warn("failed while processing even: %s", e)
+            }
         }
     } finally {
         if (yield cancelled()) {
