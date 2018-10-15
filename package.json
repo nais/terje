@@ -5,6 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "@kubernetes/client-node": "^0.6.0",
+    "azure-graph": "^4.1.0",
     "express": "^4.16.3",
     "pino": "^5.6.1",
     "prom-client": "^11.1.3",
