@@ -1,15 +1,18 @@
 import {all, call, cancelled, take} from "redux-saga/effects";
 import {watchApiResources} from "./resourcewatcher/eventChannel";
-import {addResourceToRole, removeResourceFromRole} from "./role/rolecreator";
+import {addResourceToRole, removeResourceFromRole} from "./role/creator";
 import {fetchRole, replaceRole} from "./role/sagas";
 import {EVENT_RESOURCE_ADDED, EVENT_RESOURCE_DELETED, EVENT_RESOURCE_MODIFIED} from "./resourcewatcher/events";
 import {V1ObjectMeta, V1Role} from "@kubernetes/client-node";
 
 import parentLogger from "./logger";
+import NodeCache from "node-cache";
+import {getResourceTypeFromSelfLink, getTeamFromMetadata} from "./helpers";
+import {syncRoleBinding} from "./rolebinding/sagas";
 
 const logger = parentLogger.child({module: 'main'});
 
-export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMeta }) {
+export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMeta }, cache: NodeCache) {
     logger.info("Saga got event for resource", event.metadata.name, "in namespace", event.metadata.namespace);
 
     let resourceType = getResourceTypeFromSelfLink(event.metadata.selfLink);
@@ -37,20 +40,21 @@ export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMe
         default:
             logger.info('invalid event type:', event);
             return;
-
     }
 
     yield call(replaceRole, updatedRole);
+    yield call(syncRoleBinding, cache, team, event.metadata.namespace);
 }
 
 function* watchResourceEvents() {
     const resourceEventsChannel = yield call(watchApiResources);
+    let cache = new NodeCache();
 
     try {
         while (true) {
             try {
                 let event = yield take(resourceEventsChannel);
-                yield handleResourceEvent(event);
+                yield handleResourceEvent(event, cache);
             } catch (e) {
                 logger.warn("failed while processing even: %s", e)
             }
@@ -63,24 +67,8 @@ function* watchResourceEvents() {
     }
 }
 
-
 export default function* rootSaga() {
     yield all([
         watchResourceEvents(),
     ])
-}
-
-function getTeamFromMetadata(labels: { [key: string]: string }): string {
-    if (labels) {
-        if (labels.hasOwnProperty("team")) {
-            return labels.team;
-        }
-    }
-}
-
-function getResourceTypeFromSelfLink(selfLink: string) {
-    // Example selfLink: '/api/v1/namespaces/aura/pods/debug-68cffcddb-vrstj'
-
-    let parts = selfLink.split('/');
-    return parts[parts.length - 2]
 }

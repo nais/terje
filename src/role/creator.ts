@@ -1,4 +1,5 @@
 import {V1ObjectMeta, V1PolicyRule, V1Role} from '@kubernetes/client-node';
+import {createObjectMeta, ensureManagedByTerje} from "../helpers";
 
 function createInitialPolicyRule(resourceType: string, resourceName: string): V1PolicyRule {
     let rule: V1PolicyRule = new V1PolicyRule();
@@ -33,25 +34,15 @@ export function addResourceToRole(role: V1Role, resourceType: string, resourceNa
 
     // If above for loop did not exit, that means this resource type is new for this role and the role already has other rules. Add new rule.
     role.rules.push(createInitialPolicyRule(resourceType, resourceName));
-    return ensureManagedByTerje(role)
+    role.metadata = ensureManagedByTerje(role.metadata);
+
+    return role;
 }
 
 export function createRole(name: string, namespace: string): V1Role {
     let role: V1Role = new V1Role();
 
-    role.metadata = new V1ObjectMeta();
-    role.metadata.name = name;
-    role.metadata.namespace = namespace;
-
-    return ensureManagedByTerje(role);
-}
-
-export function ensureManagedByTerje(role: V1Role): V1Role {
-    if (!(role.metadata.labels)) {
-        role.metadata.labels = {"managed-by": "Terje"};
-    } else {
-        role.metadata.labels["managed-by"] = "Terje";
-    }
+    role.metadata = createObjectMeta(name, namespace);
 
     return role;
 }
