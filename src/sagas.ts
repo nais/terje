@@ -6,19 +6,19 @@ import {EVENT_RESOURCE_ADDED, EVENT_RESOURCE_DELETED, EVENT_RESOURCE_MODIFIED} f
 import {V1ObjectMeta, V1Role} from "@kubernetes/client-node";
 
 import parentLogger from "./logger";
-import NodeCache from "node-cache";
 import {getResourceTypeFromSelfLink, getTeamFromMetadata} from "./helpers";
 import {syncRoleBinding} from "./rolebinding/sagas";
+import { TerjeCache } from "./types";
 
 const logger = parentLogger.child({module: 'main'});
 
-export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMeta }, cache: NodeCache) {
-    logger.info("Saga got event for resource", event.metadata.name, "in namespace", event.metadata.namespace);
+export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMeta }, cache: TerjeCache) {
+    logger.debug("Saga got event for resource", event.metadata.name, "in namespace", event.metadata.namespace);
 
     let resourceType = getResourceTypeFromSelfLink(event.metadata.selfLink);
     let team = getTeamFromMetadata(event.metadata.labels);
     if (!(team)) {
-        logger.info("Empty team name label, skipping");
+        logger.debug("Empty team name label, skipping");
         return
     }
 
@@ -48,7 +48,7 @@ export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMe
 
 function* watchResourceEvents() {
     const resourceEventsChannel = yield call(watchApiResources);
-    let cache = new NodeCache();
+    let cache = {} // KISS
 
     try {
         while (true) {

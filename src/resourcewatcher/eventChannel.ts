@@ -35,6 +35,8 @@ export function watchApiResources() {
                     (type: string, obj: any) => {
                         logger.debug("type:", type, "obj:", obj);
                         switch (type) {
+                            case 'MODIFIED':
+                                return emitter(resourceAdded(obj.metadata));
                             case 'ADDED':
                                 return emitter(resourceAdded(obj.metadata));
                             case 'DELETED':

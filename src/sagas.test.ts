@@ -5,7 +5,6 @@ import {handleResourceEvent} from './sagas';
 import {EVENT_RESOURCE_ADDED, EVENT_RESOURCE_DELETED} from './resourcewatcher/events';
 import {addResourceToRole, createRole} from "./role/creator";
 import {syncRoleBinding} from "./rolebinding/sagas";
-import NodeCache from "node-cache";
 
 test('test resource create event leads to fetchRole and replaceRole sagas', () => {
     const metadata = new V1ObjectMeta();
@@ -22,7 +21,7 @@ test('test resource create event leads to fetchRole and replaceRole sagas', () =
     const mockRoleResponse = createRole('nais:team:aura', metadata.namespace);
     addResourceToRole(mockRoleResponse, 'pods', metadata.name);
 
-    const cache = new NodeCache();
+    const cache = {}
     const gen = handleResourceEvent(event, cache);
 
     expect(gen.next().value).toEqual(
@@ -55,8 +54,8 @@ test('test resource deleted event leads to fetchRole and replaceRole sagas', () 
         metadata: metadata
     };
 
-    const cache = new NodeCache();
-    const gen = handleResourceEvent(event, cache);
+    const cache = {}
+    const gen = handleResourceEvent(event, cache)
 
     expect(gen.next().value).toEqual(
         call(fetchRole, 'nais:team:' + metadata.labels['team'], metadata.namespace)

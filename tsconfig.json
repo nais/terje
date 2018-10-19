@@ -10,6 +10,10 @@
         "lib": ["es6"]
     },
     "include": [
-        "src/**/*.ts"
+        "src/app.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "build"
     ]
 }
