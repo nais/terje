@@ -8,7 +8,6 @@ jobs:
       - attach_workspace:
           at: ./
       - checkout
-      - setup_remote_docker
       - restore_cache: # special step to restore the dependency cache
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
@@ -31,8 +30,9 @@ jobs:
 
   publish-docker-hub:
     docker:
-      - image: cibuilds/github:0.10
+      - image: circleci/node:10-stretch
     steps:
+      - setup_remote_docker
       - attach_workspace:
           at: ./
       - restore_cache:
