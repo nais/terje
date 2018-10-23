@@ -1,6 +1,6 @@
 {
   "name": "terje-js",
-  "version": "2.3.3",
+  "version": "2.3.4",
   "repository": "github.com/navikt/terje",
   "license": "MIT",
   "dependencies": {
