@@ -29,12 +29,13 @@ jobs:
           path: "reports/js-test-results.xml"
 
   publish-docker-hub:
+    working_directory: ~/terje
     docker:
       - image: circleci/node:10-stretch
     steps:
-      - setup_remote_docker
       - attach_workspace:
           at: ./
+      - setup_remote_docker
       - restore_cache:
           keys:
             - v1-{{ .Branch }}
