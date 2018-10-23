@@ -8,7 +8,7 @@ const logger = parentLogger.child({ module: 'azure' });
 interface Group { fields: { GruppeID: string } }
 export async function getRegisteredTeamsFromSharepoint() {
     const response = await get('/groups/9f0d0ea1-0226-4aa9-9bf9-b6e75816fabf/sites/root/lists/nytt team/items?expand=fields').catch(error => {
-        logger.warn("failed to get groups from Microsoft Graph Api, error was:", error)
+        logger.warn("failed to get groups from Microsoft Graph Api, error was:", error.stack)
         return false;
     });
 

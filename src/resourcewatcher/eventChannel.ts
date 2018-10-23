@@ -47,7 +47,7 @@ export function watchApiResources() {
                     (err: any) => {
                         emitter(END);
                         if (err) {
-                            logger.warn(err);
+                            logger.warn(err.stack);
                         }
                     });
             });

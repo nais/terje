@@ -24,7 +24,7 @@ function createRoleBinding(team: string, groupId: string, namespace: string) {
                 }
             }).catch(logger.warn);
     } catch (e) {
-        logger.warn('caught exception while replacing RoleBinding ', e);
+        logger.warn('caught exception while replacing RoleBinding ', e.stack);
     }
 }
 
