@@ -1,11 +1,9 @@
 version: 2
 jobs:
-  build:
+  test-only:
     docker:
       - image: circleci/node:10-stretch
     steps:
-      - attach_workspace:
-          at: ~/
       - checkout
       - restore_cache: # special step to restore the dependency cache
           key: dependency-cache-{{ checksum "package.json" }}
@@ -31,8 +29,7 @@ jobs:
     docker:
       - image: circleci/node:10-stretch
     steps:
-      - attach_workspace:
-          at: ~/
+      - checkout
       - setup_remote_docker
       - restore_cache:
           keys:
@@ -73,10 +70,11 @@ workflows:
   version: 2
   main:
     jobs:
-      - build
+      - test-only:
+          filters:
+            tags:
+              ignore: /^.+$/
       - publish-docker-hub:
-          requires:
-            - build
           filters:
             branches:
               only: master
