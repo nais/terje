@@ -25,9 +25,9 @@ export function createObjectMeta(name: string, namespace: string) {
 
 export function ensureManagedByTerje(metadata: V1ObjectMeta): V1ObjectMeta {
     if (!(metadata.labels)) {
-        metadata.labels = {"managed-by": "TERJE"};
+        metadata.labels = {"managed-by": "terje"};
     } else {
-        metadata.labels["managed-by"] = "TERJE";
+        metadata.labels["managed-by"] = "terje";
     }
 
     return metadata;

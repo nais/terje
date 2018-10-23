@@ -1,4 +1,4 @@
-import {all, call, cancelled, take} from "redux-saga/effects";
+import {all, call, cancelled, take } from "redux-saga/effects";
 import {watchApiResources} from "./resourcewatcher/eventChannel";
 import {addResourceToRole, removeResourceFromRole} from "./role/creator";
 import {fetchRole, replaceRole} from "./role/sagas";
@@ -6,13 +6,12 @@ import {EVENT_RESOURCE_ADDED, EVENT_RESOURCE_DELETED, EVENT_RESOURCE_MODIFIED} f
 import {V1ObjectMeta, V1Role} from "@kubernetes/client-node";
 
 import parentLogger from "./logger";
-import {getResourceTypeFromSelfLink, getTeamFromMetadata} from "./helpers";
-import {syncRoleBinding} from "./rolebinding/sagas";
-import { TerjeCache } from "./types";
+import {getResourceTypeFromSelfLink, getTeamFromMetadata } from "./helpers";
+import {keepRoleBindingsInSync} from "./rolebinding/sagas";
 
 const logger = parentLogger.child({module: 'main'});
 
-export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMeta }, cache: TerjeCache) {
+export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMeta } ) {
     logger.debug("Saga got event for resource", event.metadata.name, "in namespace", event.metadata.namespace);
 
     let resourceType = getResourceTypeFromSelfLink(event.metadata.selfLink);
@@ -43,20 +42,18 @@ export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMe
     }
 
     yield call(replaceRole, updatedRole);
-    yield call(syncRoleBinding, cache, team, event.metadata.namespace);
 }
 
 function* watchResourceEvents() {
     const resourceEventsChannel = yield call(watchApiResources);
-    let cache = {} // KISS
 
     try {
         while (true) {
             try {
                 let event = yield take(resourceEventsChannel);
-                yield handleResourceEvent(event, cache);
+                yield handleResourceEvent(event);
             } catch (e) {
-                logger.warn("failed while processing event: %s", e.stack)
+                logger.warn("failed while processing event: %s %s", e, e.stack)
             }
         }
     } finally {
@@ -70,5 +67,6 @@ function* watchResourceEvents() {
 export default function* rootSaga() {
     yield all([
         watchResourceEvents(),
+        keepRoleBindingsInSync(),
     ])
 }

@@ -1,15 +1,18 @@
-import {KubeConfig, RbacAuthorization_v1Api} from '@kubernetes/client-node';
-import {TerjeCache} from '../types'
+import {KubeConfig, RbacAuthorization_v1Api, Core_v1Api, V1Namespace} from '@kubernetes/client-node';
 import {getRegisteredTeamsFromSharepoint} from './azure'
 
 import parentLogger from "../logger";
 import {createRoleBindingResource} from "./creator";
+import { call } from 'redux-saga/effects';
+import { delay } from 'redux-saga';
+import { Group } from './types';
 
 const logger = parentLogger.child({module: 'rolebinding'});
 
 const kubeConfig = new KubeConfig();
 kubeConfig.loadFromDefault();
 const rbacApi = kubeConfig.makeApiClient(RbacAuthorization_v1Api);
+const coreApi = kubeConfig.makeApiClient(Core_v1Api);
 
 function createRoleBinding(team: string, groupId: string, namespace: string) {
     const roleBinding = createRoleBindingResource(team, groupId, namespace);
@@ -22,33 +25,45 @@ function createRoleBinding(team: string, groupId: string, namespace: string) {
                 } else {
                     logger.warn('failed while updating RoleBinding for team: %s, response was: %s', team, JSON.stringify(response));
                 }
-            }).catch(logger.warn);
+            }).catch((e) => logger.warn(e, e.stack));
     } catch (e) {
-        logger.warn('caught exception while replacing RoleBinding ', e.stack);
+        logger.warn('caught exception while replacing RoleBinding, %s %s', e, e.stack);
     }
 }
 
-export async function syncRoleBinding(cache: TerjeCache, team: string, namespace: string) {
-    if (!cache.hasOwnProperty('groups')) {
-        cache['groups'] = await getRegisteredTeamsFromSharepoint()
-        cache['groups']['_timestamp'] = String((new Date).getTime)
-        logger.info("updated AD group cache")
-    }
-
-    if (!cache['groups'].hasOwnProperty(team)) {
-        const lastUpdate = Number(cache['groups']['_timestamp'])
-        const now = (new Date).getTime()
-        
-        if (now - lastUpdate > 600) {
-            cache['groups'] = await getRegisteredTeamsFromSharepoint()
-            cache['groups']['_timestamp'] = String(now)
-            logger.info("updated AD group cache")
+function getNamespaces() {
+    return coreApi.listNamespace().then(response => {
+        if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
+            return response.body.items.filter(namespace => {
+                return namespace &&
+                    namespace.metadata &&
+                    namespace.metadata.labels &&
+                    namespace.metadata.labels.hasOwnProperty('managed-by') &&
+                    namespace.metadata.labels['managed-by'].toLowerCase() == 'terje'
+            }).map(namespace => namespace.metadata.name)
+        } else {
+            logger.warn("Failed getting namespaces, reponse was: ", response)
+            return []
         }
-    }
+    });
+}
 
-    if (cache['groups'].hasOwnProperty(team)) {
-        createRoleBinding(team, cache['groups'][team], namespace);
-    } else {
-        logger.warn("unable to create RoleBinding for team: %s, AD group not found.", team);
+export function* keepRoleBindingsInSync() {
+    let groups: [Group];
+    let namespaces: [string];
+
+    while (true) {
+        groups = yield getRegisteredTeamsFromSharepoint()
+        namespaces = yield getNamespaces()
+        logger.debug("groups", groups)
+        logger.debug("namespaces", namespaces)
+
+        for (let namespace of namespaces) {
+            for (let group of groups) {
+                yield call(createRoleBinding, group.team, group.id, namespace);
+            }
+        }
+
+        yield delay(1000 * 60);
     }
 }
