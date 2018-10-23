@@ -1,12 +1,11 @@
 version: 2
 jobs:
   build:
-    working_directory: ~/terje
     docker:
       - image: circleci/node:10-stretch
     steps:
       - attach_workspace:
-          at: ./
+          at: ~/
       - checkout
       - restore_cache: # special step to restore the dependency cache
           key: dependency-cache-{{ checksum "package.json" }}
@@ -29,23 +28,22 @@ jobs:
           path: "reports/js-test-results.xml"
 
   publish-docker-hub:
-    working_directory: ~/terje
     docker:
       - image: circleci/node:10-stretch
     steps:
       - attach_workspace:
-          at: ./
+          at: ~/
       - setup_remote_docker
       - restore_cache:
           keys:
             - v1-{{ .Branch }}
           paths:
-            - ~/caches/app.tar
+            - /cache/app.tar
       - run:
           name: docker load cache
           command: |
             set +o pipefail
-            docker load -i ~/caches/app.tar | true
+            docker load -i /cache/app.tar | true
       - run:
           name: docker build
           command: |
@@ -53,12 +51,12 @@ jobs:
       - run:
           name: docker save cache
           command: |
-            mkdir -p ~/caches
-            docker save -o ~/caches/app.tar app
+            mkdir -p /cache
+            docker save -o /cache/app.tar app
       - save_cache:
           key: v1-{{ .Branch }}-{{ epoch }}
           paths:
-            - ~/caches/app.tar
+            - /cache/app.tar
       - deploy:
           name: docker push
           command: |
