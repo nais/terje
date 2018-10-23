@@ -5,6 +5,8 @@ jobs:
     docker:
       - image: circleci/node:10-stretch
     steps:
+      - attach_workspace:
+          at: ./
       - checkout
       - setup_remote_docker
       - restore_cache: # special step to restore the dependency cache
@@ -26,6 +28,13 @@ jobs:
           prefix: tests
       - store_test_results:
           path: "reports/js-test-results.xml"
+
+  publich-docker-hub:
+    docker:
+      - image: cibuilds/github:0.10
+    steps:
+      - attach_workspace:
+          at: ./
       - restore_cache:
           keys:
             - v1-{{ .Branch }}
@@ -60,3 +69,17 @@ jobs:
               docker tag app "navikt/terje:${git_tag}"
               docker push "navikt/terje:${git_tag}"
             fi
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - build
+      - publish-docker-hub:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /^.+$/
