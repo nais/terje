@@ -7,6 +7,9 @@ jobs:
       - checkout
       - run:
           name: Run tests with JUnit as reporter
+          command: npm install
+      - run:
+          name: Run tests with JUnit as reporter
           environment:
             JEST_JUNIT_OUTPUT: "reports/js-test-results.xml"
           command: $(npm bin)/jest --ci --reporters=default --reporters=jest-junit
@@ -15,7 +18,6 @@ jobs:
           prefix: tests
       - store_test_results:
           path: "reports/js-test-results.xml"
-
   publish-docker-hub:
     docker:
       - image: circleci/node:10-stretch
@@ -37,7 +39,6 @@ jobs:
               docker tag app "navikt/terje:${git_tag}"
               docker push "navikt/terje:${git_tag}"
             fi
-
 workflows:
   version: 2
   main:
