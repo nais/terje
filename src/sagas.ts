@@ -53,7 +53,7 @@ function* watchResourceEvents() {
                 let event = yield take(resourceEventsChannel);
                 yield handleResourceEvent(event);
             } catch (e) {
-                logger.warn("failed while processing event: %s %s", e, e.stack)
+                logger.warn("failed while processing event", e, e.stack)
             }
         }
     } finally {

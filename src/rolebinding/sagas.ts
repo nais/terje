@@ -23,11 +23,11 @@ function createRoleBinding(team: string, groupId: string, namespace: string) {
                 if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
                     logger.info('updated RoleBinding for team: %s in namespace: %s', team, namespace);
                 } else {
-                    logger.warn('failed while updating RoleBinding for team: %s, response was: %s', team, JSON.stringify(response));
+                    logger.warn('failed while updating RoleBinding', response);
                 }
-            }).catch((e) => logger.warn(e, e.stack));
+            }).catch((e) => logger.warn(JSON.stringify(e), e.stack));
     } catch (e) {
-        logger.warn('caught exception while replacing RoleBinding, %s %s', e, e.stack);
+        logger.warn('caught exception while replacing RoleBinding', e, e.stack);
     }
 }
 

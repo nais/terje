@@ -23,7 +23,7 @@ export function* fetchRole(name: string, namespace: string) {
             logger.debug('did not find  role ', name, 'in namespace', namespace, ' will create it.');
             return createRole(name, namespace);
         } else {
-            logger.warn('could not fetch role due to unhandled exception, %s %s', e, e.stack);
+            logger.warn('could not fetch role due to unhandled exception', e, e.stack);
             return
         }
     }
@@ -41,7 +41,7 @@ export function* replaceRole(role: V1Role) {
             logger.warn('failed to replace role', response.response.statusMessage);
         }
     } catch (e) {
-        logger.warn('caught exception while replacing role, %s %s ', e, e.stack);
+        logger.warn('caught exception while replacing role', e, e.stack);
     }
 
     return false;

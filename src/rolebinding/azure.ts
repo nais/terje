@@ -8,7 +8,7 @@ const logger = parentLogger.child({ module: 'azure' });
 
 export async function getRegisteredTeamsFromSharepoint(): Promise<[Group]> {
     const response = await get('/groups/9f0d0ea1-0226-4aa9-9bf9-b6e75816fabf/sites/root/lists/nytt team/items?expand=fields').catch(error => {
-        logger.warn("failed to get groups from Microsoft Graph Api, error was: %s, stack: %s", error, error.stack)
+        logger.warn("failed to get groups from Microsoft Graph Api", error, error.stack)
         return false;
     });
 
@@ -51,7 +51,7 @@ function get(url: string) {
             creds.clientSecret,
             function (err: Error, tokenResponse: TokenResponse) {
                 if (err) {
-                    logger.warn('unable to auth with azur: %s %s', err,  err.stack);
+                    logger.warn('unable to auth with azure', err,  err.stack);
                 } else {
                     const client = MicrosoftGraph.Client.init({
                         defaultVersion: 'v1.0',
