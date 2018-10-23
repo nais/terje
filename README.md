@@ -15,7 +15,7 @@ npm run clean
 ```
 
 ### Trigger release
-This will trigger an automated docker hub build
+This will trigger a release
 ```
 npm version [patch,minor,major]
 git push --tags
