@@ -5,15 +5,6 @@ jobs:
       - image: circleci/node:10-stretch
     steps:
       - checkout
-      - restore_cache: # special step to restore the dependency cache
-          key: dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: npm install
-          command: npm install
-      - save_cache: # special step to save the dependency cache
-          key: dependency-cache-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
       - run:
           name: Run tests with JUnit as reporter
           environment:
@@ -31,29 +22,10 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - restore_cache:
-          keys:
-            - v1-{{ .Branch }}
-          paths:
-            - /cache/app.tar
-      - run:
-          name: docker load cache
-          command: |
-            set +o pipefail
-            docker load -i /cache/app.tar | true
       - run:
           name: docker build
           command: |
-            docker build --cache-from=app -t app .
-      - run:
-          name: docker save cache
-          command: |
-            mkdir -p /cache
-            docker save -o /cache/app.tar app
-      - save_cache:
-          key: v1-{{ .Branch }}-{{ epoch }}
-          paths:
-            - /cache/app.tar
+            docker build -t app .
       - deploy:
           name: docker push
           command: |
