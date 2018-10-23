@@ -53,15 +53,19 @@ export function* keepRoleBindingsInSync() {
     let namespaces: [string];
 
     while (true) {
-        groups = yield getRegisteredTeamsFromSharepoint()
-        namespaces = yield getNamespaces()
-        logger.debug("groups", groups)
-        logger.debug("namespaces", namespaces)
+        try {
+            groups = yield getRegisteredTeamsFromSharepoint()
+            namespaces = yield getNamespaces()
+            logger.debug("groups", groups)
+            logger.debug("namespaces", namespaces)
 
-        for (let namespace of namespaces) {
-            for (let group of groups) {
-                yield call(createRoleBinding, group.team, group.id, namespace);
+            for (let namespace of namespaces) {
+                for (let group of groups) {
+                    yield call(createRoleBinding, group.team, group.id, namespace);
+                }
             }
+        } catch (e) {
+            logger.warn("error caught while syncing groups", e)
         }
 
         yield delay(1000 * 60);

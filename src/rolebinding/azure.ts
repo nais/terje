@@ -7,16 +7,17 @@ const MicrosoftGraph = require("@microsoft/microsoft-graph-client"); // Import w
 const logger = parentLogger.child({ module: 'azure' });
 
 export async function getRegisteredTeamsFromSharepoint(): Promise<[Group]> {
-    const response = await get('/groups/9f0d0ea1-0226-4aa9-9bf9-b6e75816fabf/sites/root/lists/nytt team/items?expand=fields').catch(error => {
-        logger.warn("failed to get groups from Microsoft Graph Api", error, error.stack)
-        return false;
-    });
-
-    if (!response) {
-        return
-    }
-
     return new Promise<[Group]>(async (resolve, reject) => {
+        const response = await get('/groups/9f0d0ea1-0226-4aa9-9bf9-b6e75816fabf/sites/root/lists/nytt team/items?expand=fields').catch(error => {
+            logger.warn("failed to get groups from Microsoft Graph Ap", error, error.stack)
+            return false;
+        });
+
+        if (!response) {
+            reject("failed to get groups from Microsoft Graph Api")
+            return
+        }
+
         const groupPromises: [Promise<Group>] = response.value
             .filter((group: ADGroup) => group.fields.hasOwnProperty('GruppeID'))
             .map((group: ADGroup) => groupIdWithMail(group.fields.GruppeID));
