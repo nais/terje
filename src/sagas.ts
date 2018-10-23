@@ -56,7 +56,7 @@ function* watchResourceEvents() {
                 let event = yield take(resourceEventsChannel);
                 yield handleResourceEvent(event, cache);
             } catch (e) {
-                logger.warn("failed while processing even: %s", e)
+                logger.warn("failed while processing event: %s", e)
             }
         }
     } finally {
