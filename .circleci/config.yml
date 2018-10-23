@@ -18,9 +18,9 @@ jobs:
             - ./node_modules
       - run:
           name: Run tests with JUnit as reporter
-          command: jest --ci --reporters=default --reporters=jest-junit
           environment:
             JEST_JUNIT_OUTPUT: "reports/js-test-results.xml"
+          command: $(npm bin)/jest --ci --reporters=default --reporters=jest-junit
       - store_artifacts:
           path: "reports/js-test-results.xml"
           prefix: tests
