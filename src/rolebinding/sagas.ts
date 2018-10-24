@@ -45,8 +45,8 @@ async function getNamespaces() {
             return namespace &&
                 namespace.metadata &&
                 namespace.metadata.labels &&
-                namespace.metadata.labels.hasOwnProperty('managed-by') &&
-                namespace.metadata.labels['managed-by'].toLowerCase() == 'terje';
+                namespace.metadata.labels.hasOwnProperty('terje') &&
+                namespace.metadata.labels['terje'].toLowerCase() == 'enabled';
         }).map(namespace => namespace.metadata.name);
     }
     else {
