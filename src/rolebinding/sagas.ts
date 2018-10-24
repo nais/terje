@@ -6,6 +6,7 @@ import {createRoleBindingResource} from "./creator";
 import { call } from 'redux-saga/effects';
 import { delay } from 'redux-saga';
 import { Group } from './types';
+import bodyParser = require('body-parser');
 
 const logger = parentLogger.child({module: 'rolebinding'});
 
@@ -25,27 +26,33 @@ function createRoleBinding(team: string, groupId: string, namespace: string) {
                 } else {
                     logger.warn('failed while updating RoleBinding', response);
                 }
-            }).catch((e) => logger.warn(JSON.stringify(e), e.stack));
+            }).catch(error => {
+                if (error.body && error.body.message) {
+                    logger.warn("failed to update RoleBinding because:", error.body.message)
+                } else {
+                    logger.warn("unexpected error while updating RoleBinding", error)
+                }
+            });
     } catch (e) {
         logger.warn('caught exception while replacing RoleBinding', e, e.stack);
     }
 }
 
-function getNamespaces() {
-    return coreApi.listNamespace().then(response => {
-        if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
-            return response.body.items.filter(namespace => {
-                return namespace &&
-                    namespace.metadata &&
-                    namespace.metadata.labels &&
-                    namespace.metadata.labels.hasOwnProperty('managed-by') &&
-                    namespace.metadata.labels['managed-by'].toLowerCase() == 'terje'
-            }).map(namespace => namespace.metadata.name)
-        } else {
-            logger.warn("Failed getting namespaces, reponse was: ", response)
-            return []
-        }
-    });
+async function getNamespaces() {
+    const response = await coreApi.listNamespace();
+    if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
+        return response.body.items.filter(namespace => {
+            return namespace &&
+                namespace.metadata &&
+                namespace.metadata.labels &&
+                namespace.metadata.labels.hasOwnProperty('managed-by') &&
+                namespace.metadata.labels['managed-by'].toLowerCase() == 'terje';
+        }).map(namespace => namespace.metadata.name);
+    }
+    else {
+        logger.warn("failed getting namespaces, reponse was: ", response);
+        return [];
+    }
 }
 
 export function* keepRoleBindingsInSync() {
