@@ -2,9 +2,28 @@ import { AuthenticationContext, TokenResponse } from 'adal-node';
 import parentLogger from '../logger';
 import { creds } from '../util/config';
 import { Group, ADGroup } from './types';
+import { httpify } from 'caseless';
+
+const HttpsProxyAgent = require('https-proxy-agent')
 const MicrosoftGraph = require("@microsoft/microsoft-graph-client"); // Import without types because they're bugged.
 
 const logger = parentLogger.child({ module: 'azure' });
+const adalLogger = require('adal-node').Logging;
+
+adalLogger.setLoggingOptions({
+    log: (level: string, message: string, error: Error) => {
+        if (message) {
+            logger.info("adal:", level, message);
+        }
+
+        if (error) {
+            logger.warn("adal:", level, error);
+        }
+    },
+    level: adalLogger.LOGGING_LEVEL.WARN,
+    loggingWithPII: false,
+});
+
 
 export async function getRegisteredTeamsFromSharepoint(): Promise<[Group]> {
     return new Promise<[Group]>(async (resolve, reject) => {
@@ -58,7 +77,8 @@ function get(url: string) {
                         defaultVersion: 'v1.0',
                         authProvider: (done: any) => {
                             done(null, tokenResponse.accessToken)
-                        }
+                        },
+                        fetchOptions: Object.assign(makeHttpsAgent(), {})
                     })
                     client
                         .api(url)
@@ -69,4 +89,12 @@ function get(url: string) {
             }
         );
     })
+}
+
+function makeHttpsAgent() {
+    if (process.env.HTTPS_PROXY) {
+        return {agent: HttpsProxyAgent(process.env.HTTPS_PROXY)}
+    }
+
+    return {}
 }
