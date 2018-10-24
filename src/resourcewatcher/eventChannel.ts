@@ -20,6 +20,7 @@ export function watchApiResources() {
         "/apis/apps/v1/statefulsets",
         "/apis/extensions/v1beta1/ingresses",
         "/apis/autoscaling/v1/horizontalpodautoscalers",
+        "/apis/nais.io/v1alpha1/applications",
     ];
 
     return eventChannel(emitter => {
