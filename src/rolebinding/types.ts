@@ -1,9 +1,9 @@
-import {V1RoleBinding} from '@kubernetes/client-node';
-import * as http from 'http';
+import {V1RoleBinding} from '@kubernetes/client-node'
+import * as http from 'http'
 
 export interface RbacApiRoleBindingResponse {
-    response: http.IncomingMessage;
-    body: V1RoleBinding;
+    response: http.IncomingMessage
+    body: V1RoleBinding
 }
 
 export interface Group { id: string, team: string }

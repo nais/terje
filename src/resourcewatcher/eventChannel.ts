@@ -1,10 +1,10 @@
-import {buffers, END, eventChannel} from "redux-saga";
-import {resourceAdded, resourceDeleted} from "./events";
-import {KubeConfig, Watch} from "@kubernetes/client-node";
+import {buffers, END, eventChannel} from "redux-saga"
+import {resourceAdded, resourceDeleted} from "./events"
+import {KubeConfig, Watch} from "@kubernetes/client-node"
 
-import parentLogger from "../logger";
+import parentLogger from "../logger"
 
-const logger = parentLogger.child({module: 'resourcewatcher'});
+const logger = parentLogger.child({module: 'resourcewatcher'})
 
 export function watchApiResources() {
     let apis = [
@@ -21,39 +21,39 @@ export function watchApiResources() {
         "/apis/extensions/v1beta1/ingresses",
         "/apis/autoscaling/v1/horizontalpodautoscalers",
         "/apis/nais.io/v1alpha1/applications",
-    ];
+    ]
 
     return eventChannel(emitter => {
-            let kubeConfig = new KubeConfig();
-            kubeConfig.loadFromDefault();
-            logger.debug(kubeConfig);
+            let kubeConfig = new KubeConfig()
+            kubeConfig.loadFromDefault()
+            logger.debug(kubeConfig)
 
-            let watch = new Watch(kubeConfig);
+            let watch = new Watch(kubeConfig)
 
             let watchers = apis.map(api => {
                 return watch.watch(api,
                     {"labelSelector": "team"},
                     (type: string, obj: any) => {
-                        logger.debug("type:", type, "obj:", obj);
+                        logger.debug("type:", type, "obj:", obj)
                         switch (type) {
                             case 'MODIFIED':
-                                return emitter(resourceAdded(obj.metadata));
+                                return emitter(resourceAdded(obj.metadata))
                             case 'ADDED':
-                                return emitter(resourceAdded(obj.metadata));
+                                return emitter(resourceAdded(obj.metadata))
                             case 'DELETED':
-                                return emitter(resourceDeleted(obj.metadata.name));
+                                return emitter(resourceDeleted(obj.metadata.name))
                         }
                     },
 
                     (err: any) => {
-                        emitter(END);
+                        emitter(END)
                         if (err) {
-                            logger.warn(err, err.stack);
+                            logger.warn(err, err.stack)
                         }
-                    });
-            });
+                    })
+            })
 
-            return () => watchers.forEach(watcher => watcher.abort());
+            return () => watchers.forEach(watcher => watcher.abort())
         },
         buffers.expanding(10) // We need to explicitly specify a buffer as eventChanel by default does not buffer anything.
     )

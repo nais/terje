@@ -1,55 +1,86 @@
-import {fetchRole, replaceRole} from './sagas';
-import {call} from 'redux-saga/effects';
-import {createRole} from "./creator";
-import {KubeConfig, RbacAuthorization_v1Api} from "@kubernetes/client-node";
+import {replaceRole, keepRolesInSync, fetchRoles, syncRoles} from './sagas'
+import {call, select} from 'redux-saga/effects'
+import {createRole} from "./creator"
+import {KubeConfig, RbacAuthorization_v1Api, V1RoleList} from "@kubernetes/client-node"
 
-import parentLogger from "../logger";
+import parentLogger from "../logger"
+import { selectRoleState } from './types'
+import { delay } from 'bluebird'
 
-const logger = parentLogger.child({module: 'sagas.test'});
+const logger = parentLogger.child({module: 'sagas.test'})
 
-const team = 'unittest';
-const roleName = `nais:team:${team}`;
-const namespace = 'namespace';
-const role = createRole(roleName, namespace);
+const team = 'unittest'
+const namespace = 'namespace'
+const mockRole = createRole(team, namespace)
 
-const kubeConfig = new KubeConfig();
-kubeConfig.loadFromDefault();
-const rbacApi = kubeConfig.makeApiClient(RbacAuthorization_v1Api);
+const mockRoleList = new V1RoleList()
+mockRoleList.items = [mockRole]
 
-test('test fetch role saga', () => {
-    const mockRoleResponse = {body: role};
+const kubeConfig = new KubeConfig()
+kubeConfig.loadFromDefault()
+const rbacApi = kubeConfig.makeApiClient(RbacAuthorization_v1Api)
 
-    const gen = fetchRole(roleName, namespace);
+test('test keep roles in sync', () => {
+    const mockState = {'namespace': {'team': mockRole}}
+    const mockClusterState = [mockRole]
+    const gen = keepRolesInSync()
+
     expect(gen.next().value).toEqual(
-        call([rbacApi, rbacApi.readNamespacedRole], roleName, namespace)
-    );
+        select(selectRoleState)
+    )
 
-    expect(gen.next(mockRoleResponse).value).toEqual(
-        role
-    );
+    expect(gen.next(mockState).value).toEqual(
+        call(fetchRoles)
+    )
+    
+    expect(gen.next(mockClusterState).value).toEqual(
+        call(syncRoles, mockClusterState, mockState)
+    )
 
-    expect(gen.next().done).toBe(true);
-});
+    expect(gen.next().value).toEqual(
+        delay(60 * 1000)
+    )
+
+    // Should start on the beginning as it's a while(true) loop
+    expect(gen.next().value).toEqual(
+        select(selectRoleState)
+    )
+})
+
+test('test fetch roles saga', () => {
+    const mockRoleListResponse = {body: mockRoleList}
+
+    const gen = fetchRoles()
+    expect(gen.next().value).toEqual(
+        call([rbacApi, rbacApi.listRoleForAllNamespaces])
+    )
+
+    expect(gen.next(mockRoleListResponse).value).toEqual(
+        [mockRole]
+    )
+
+    expect(gen.next().done).toBe(true)
+})
 
 test('test create or update role saga', () => {
     const mockRoleResponse = {
         response: {
             statusCode: 200,
         },
-        body: role
-    };
+        body: mockRole
+    }
 
-    const gen = replaceRole(role);
+    const gen = replaceRole(mockRole)
     expect(gen.next().value).toEqual(
-        call([rbacApi, rbacApi.replaceNamespacedRole], roleName, namespace, role)
-    );
+        call([rbacApi, rbacApi.replaceNamespacedRole], `nais:t eam:${team}`, namespace, mockRole)
+    )
 
     expect(gen.next(mockRoleResponse).value).toEqual(
         true
-    );
+    )
 
-    expect(gen.next().done).toBe(true);
-});
+    expect(gen.next().done).toBe(true)
+})
 
 test('test create or update role saga error handling', () => {
     const mockRoleResponse = {
@@ -57,16 +88,16 @@ test('test create or update role saga error handling', () => {
             statusCode: 401,
             statusMessage: "Unauthorized"
         }
-    };
+    }
 
-    const gen = replaceRole(role);
+    const gen = replaceRole(mockRole)
     expect(gen.next().value).toEqual(
-        call([rbacApi, rbacApi.replaceNamespacedRole], roleName, namespace, role)
-    );
+        call([rbacApi, rbacApi.replaceNamespacedRole], `nais:team:${team}`, namespace, mockRole)
+    )
 
     expect(gen.next(mockRoleResponse).value).toEqual(
         false
-    );
+    )
 
-    expect(gen.next().done).toBe(true);
-});
+    expect(gen.next().done).toBe(true)
+})
