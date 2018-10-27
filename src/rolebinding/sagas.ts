@@ -69,6 +69,7 @@ export function* keepRoleBindingsInSync() {
             for (let namespace of namespaces) {
                 for (let group of groups) {
                     yield call(createRoleBinding, group.team, group.id, namespace);
+                    yield delay(100)
                 }
             }
         } catch (e) {

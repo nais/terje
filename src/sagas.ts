@@ -8,6 +8,7 @@ import {V1ObjectMeta, V1Role} from "@kubernetes/client-node";
 import parentLogger from "./logger";
 import {getResourceTypeFromSelfLink, getTeamFromMetadata } from "./helpers";
 import {keepRoleBindingsInSync} from "./rolebinding/sagas";
+import { delay } from "redux-saga";
 
 const logger = parentLogger.child({module: 'main'});
 
@@ -42,6 +43,7 @@ export function* handleResourceEvent(event: { type: string, metadata: V1ObjectMe
     }
 
     yield call(replaceRole, updatedRole);
+    yield delay(100)
 }
 
 function* watchResourceEvents() {
