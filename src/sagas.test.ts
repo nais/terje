@@ -4,6 +4,7 @@ import {V1ObjectMeta} from '@kubernetes/client-node';
 import {handleResourceEvent} from './sagas';
 import {EVENT_RESOURCE_ADDED, EVENT_RESOURCE_DELETED} from './resourcewatcher/events';
 import {addResourceToRole, createRole} from "./role/creator";
+import { delay } from 'redux-saga';
 
 test('test resource create event leads to fetchRole and replaceRole sagas', () => {
     const metadata = new V1ObjectMeta();
@@ -29,6 +30,8 @@ test('test resource create event leads to fetchRole and replaceRole sagas', () =
     expect(gen.next(mockRoleResponse).value).toEqual(
         call(replaceRole, mockRoleResponse)
     );
+
+    expect(gen.next().value).toBeDefined() // delay
 
     expect(gen.next().done).toBeTruthy();
 });
@@ -57,6 +60,8 @@ test('test resource deleted event leads to fetchRole and replaceRole sagas', () 
     expect(gen.next(mockRoleResponse).value).toEqual(
         call(replaceRole, mockRoleResponse)
     );
+
+    expect(gen.next().value).toBeDefined() // delay
 
     expect(gen.next().done).toBeTruthy();
 });

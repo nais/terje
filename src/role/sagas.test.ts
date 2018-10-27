@@ -24,7 +24,9 @@ test('test fetch role saga', () => {
         call([rbacApi, rbacApi.readNamespacedRole], roleName, namespace)
     );
 
-    expect(gen.next(mockRoleResponse).value).toEqual(
+    expect(gen.next(mockRoleResponse).value).toBeDefined() // delay
+
+    expect(gen.next().value).toEqual(
         role
     );
 
@@ -44,7 +46,9 @@ test('test create or update role saga', () => {
         call([rbacApi, rbacApi.replaceNamespacedRole], roleName, namespace, role)
     );
 
-    expect(gen.next(mockRoleResponse).value).toEqual(
+    expect(gen.next(mockRoleResponse).value).toBeDefined() // delay
+
+    expect(gen.next().value).toEqual(
         true
     );
 
@@ -64,7 +68,9 @@ test('test create or update role saga error handling', () => {
         call([rbacApi, rbacApi.replaceNamespacedRole], roleName, namespace, role)
     );
 
-    expect(gen.next(mockRoleResponse).value).toEqual(
+    expect(gen.next(mockRoleResponse).value).toBeDefined() // delay
+
+    expect(gen.next().value).toEqual(
         false
     );
 

@@ -4,6 +4,7 @@ import {call} from 'redux-saga/effects'
 import {createRole} from './creator';
 
 import parentLogger from "../logger";
+import { delay } from 'redux-saga';
 
 const logger = parentLogger.child({module: 'role'});
 
@@ -15,6 +16,7 @@ export function* fetchRole(name: string, namespace: string) {
     try {
         const response: RbacApiRoleResponse =
             yield call([rbacApi, rbacApi.readNamespacedRole], name, namespace);
+           yield delay(100)
         logger.debug('fetched role', response.body.metadata.name);
 
         return response.body;
@@ -33,6 +35,7 @@ export function* replaceRole(role: V1Role) {
     try {
         const response: RbacApiRoleResponse =
             yield call([rbacApi, rbacApi.replaceNamespacedRole], role.metadata.name, role.metadata.namespace, role);
+            yield delay(100)
 
         if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
             logger.info('updated Role for team: %s in namespace: %s', role.metadata.name, role.metadata.namespace);
