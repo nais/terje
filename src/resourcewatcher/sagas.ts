@@ -1,6 +1,6 @@
-import { call, take, put, cancelled } from "redux-saga/effects"
-import { watchApiResources } from "./eventChannel"
-import parentLogger from "../logger"
+import { call, cancelled, put, take } from "redux-saga/effects";
+import parentLogger from "../logger";
+import { watchApiResources } from "./eventChannel";
 
 const logger = parentLogger.child({ module: 'resourcewatcher' })
 

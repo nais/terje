@@ -1,4 +1,4 @@
-import {V1ObjectMeta} from "@kubernetes/client-node"
+import { V1ObjectMeta } from "@kubernetes/client-node";
 
 export function getTeamFromMetadata(labels: { [key: string]: string }): string {
     if (labels) {
@@ -37,7 +37,7 @@ export function setManagedByTerjeLabel(metadata: V1ObjectMeta): V1ObjectMeta {
     let metadataCopy = Object.assign({}, metadata)
 
     if (!(metadataCopy.labels)) {
-        metadataCopy.labels = {"managed-by": "terje"}
+        metadataCopy.labels = { "managed-by": "terje" }
     } else {
         metadataCopy.labels["managed-by"] = "terje"
     }

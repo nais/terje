@@ -1,5 +1,5 @@
-import {addResourceToRole, createRole, removeResourceFromRole} from './creator'
-import {V1Role} from '@kubernetes/client-node'
+import { V1Role } from '@kubernetes/client-node';
+import { addResourceToRole, createRole, removeResourceFromRole } from './creator';
 
 const team = "unittest"
 const namespace = 'namespace'

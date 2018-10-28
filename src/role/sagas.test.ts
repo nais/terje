@@ -1,13 +1,13 @@
-import {replaceRole, keepRolesInSync, fetchRoles, syncRoles} from './sagas'
-import {call, select} from 'redux-saga/effects'
-import {createRole} from "./creator"
-import {KubeConfig, RbacAuthorization_v1Api, V1RoleList} from "@kubernetes/client-node"
+import { replaceRole, keepRolesInSync, fetchRoles, syncRoles } from './sagas'
+import { call, select } from 'redux-saga/effects'
+import { createRole } from "./creator"
+import { KubeConfig, RbacAuthorization_v1Api, V1RoleList } from "@kubernetes/client-node"
 
 import parentLogger from "../logger"
 import { selectRoleState } from './types'
 import { delay } from 'bluebird'
 
-const logger = parentLogger.child({module: 'sagas.test'})
+const logger = parentLogger.child({ module: 'sagas.test' })
 
 const team = 'unittest'
 const namespace = 'namespace'
@@ -21,7 +21,7 @@ kubeConfig.loadFromDefault()
 const rbacApi = kubeConfig.makeApiClient(RbacAuthorization_v1Api)
 
 test('test keep roles in sync', () => {
-    const mockState = {'namespace': {'team': mockRole}}
+    const mockState = { 'namespace': { 'team': mockRole } }
     const mockClusterState = [mockRole]
     const gen = keepRolesInSync()
 
@@ -32,7 +32,7 @@ test('test keep roles in sync', () => {
     expect(gen.next(mockState).value).toEqual(
         call(fetchRoles)
     )
-    
+
     expect(gen.next(mockClusterState).value).toEqual(
         call(syncRoles, mockClusterState, mockState)
     )
@@ -48,7 +48,7 @@ test('test keep roles in sync', () => {
 })
 
 test('test fetch roles saga', () => {
-    const mockRoleListResponse = {body: mockRoleList}
+    const mockRoleListResponse = { body: mockRoleList }
 
     const gen = fetchRoles()
     expect(gen.next().value).toEqual(
@@ -72,7 +72,7 @@ test('test create or update role saga', () => {
 
     const gen = replaceRole(mockRole)
     expect(gen.next().value).toEqual(
-        call([rbacApi, rbacApi.replaceNamespacedRole], `nais:t eam:${team}`, namespace, mockRole)
+        call([rbacApi, rbacApi.replaceNamespacedRole], `nais:team:${team}`, namespace, mockRole)
     )
 
     expect(gen.next(mockRoleResponse).value).toEqual(

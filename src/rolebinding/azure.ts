@@ -1,8 +1,7 @@
-import { AuthenticationContext, TokenResponse } from 'adal-node'
-import parentLogger from '../logger'
-import { creds } from '../util/config'
-import { Group, ADGroup } from './types'
-import { httpify } from 'caseless'
+import { AuthenticationContext, TokenResponse } from 'adal-node';
+import parentLogger from '../logger';
+import { creds } from '../util/config';
+import { Group, OfficeListEntry } from './types';
 
 const HttpsProxyAgent = require('https-proxy-agent')
 const MicrosoftGraph = require("@microsoft/microsoft-graph-client"); // Import without types because they're bugged.
@@ -38,8 +37,8 @@ export async function getRegisteredTeamsFromSharepoint(): Promise<[Group]> {
         }
 
         const groupPromises: [Promise<Group>] = response.value
-            .filter((group: ADGroup) => group.fields.hasOwnProperty('GruppeID'))
-            .map((group: ADGroup) => groupIdWithMail(group.fields.GruppeID))
+            .filter((group: OfficeListEntry) => group.fields.hasOwnProperty('GruppeID'))
+            .map((group: OfficeListEntry) => groupIdWithMail(group.fields.GruppeID))
 
         Promise.all(groupPromises).then((groupList: any) => {
             return resolve(groupList)
@@ -71,7 +70,7 @@ function get(url: string) {
             creds.clientSecret,
             function (err: Error, tokenResponse: TokenResponse) {
                 if (err) {
-                    logger.warn('unable to auth with azure', err,  err.stack)
+                    logger.warn('unable to auth with azure', err, err.stack)
                 } else {
                     const client = MicrosoftGraph.Client.init({
                         defaultVersion: 'v1.0',
@@ -93,7 +92,7 @@ function get(url: string) {
 
 function makeHttpsAgent() {
     if (process.env.HTTPS_PROXY) {
-        return {agent: HttpsProxyAgent(process.env.HTTPS_PROXY)}
+        return { agent: HttpsProxyAgent(process.env.HTTPS_PROXY) }
     }
 
     return {}

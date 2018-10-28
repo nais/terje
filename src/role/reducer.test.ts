@@ -1,8 +1,8 @@
-import { createRole, addResourceToRole } from "./creator"
-import { V1ObjectMeta, V1Role } from "@kubernetes/client-node"
-import { add, del } from "./reducer"
-import { RoleState } from "./types"
-import { getResourceTypeFromSelfLink } from "../helpers"
+import { V1ObjectMeta, V1Role } from "@kubernetes/client-node";
+import { getResourceTypeFromSelfLink } from "../helpers";
+import { addResourceToRole, createRole } from "./creator";
+import { add, del } from "./reducer";
+import { RoleState } from "./types";
 
 const role: V1Role = createRole('aura', 'default')
 const state: RoleState = { 'default': { 'aura': role } }
@@ -50,10 +50,10 @@ test('test deleting existing resource removes it from the state', () => {
     const roleWithResources = addResourceToRole(Object.assign({}, role), getResourceTypeFromSelfLink(objectMeta.selfLink), objectMeta.name)
     const roleWithoutResources = Object.assign({}, role)
     const stateWithRoleWithResources = {
-        'default': {'aura': roleWithResources},
+        'default': { 'aura': roleWithResources },
     }
     const expectedState = {
-        'default': {'aura': roleWithoutResources}
+        'default': { 'aura': roleWithoutResources }
     }
 
     expect(del(stateWithRoleWithResources, objectMeta)).toEqual(expectedState)
@@ -62,7 +62,7 @@ test('test deleting existing resource removes it from the state', () => {
 test('test deleting non-existing resource does nothing', () => {
     const roleWithResources = addResourceToRole(Object.assign({}, role), getResourceTypeFromSelfLink(objectMeta.selfLink), objectMeta.name + "other")
     const stateWithRoleWithResources = {
-        'default': {'aura': roleWithResources},
+        'default': { 'aura': roleWithResources },
     }
 
     const expectedState = Object.assign({}, stateWithRoleWithResources)

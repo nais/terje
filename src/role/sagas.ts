@@ -1,12 +1,11 @@
-import {KubeConfig, RbacAuthorization_v1Api, V1Role} from '@kubernetes/client-node'
-import {RbacApiRoleResponse, ResourceAction, RoleState, selectRoleState} from './types'
-import {call, put, take, select} from 'redux-saga/effects'
-import {createRole} from './creator'
+import { KubeConfig, RbacAuthorization_v1Api, V1Role } from '@kubernetes/client-node';
+import { delay } from 'bluebird';
+import { call, put, select } from 'redux-saga/effects';
+import parentLogger from "../logger";
+import { RbacApiRoleResponse, ResourceAction, RoleState, selectRoleState } from './types';
 
-import parentLogger from "../logger"
-import { delay } from 'bluebird'
 
-const logger = parentLogger.child({module: 'role'})
+const logger = parentLogger.child({ module: 'role' })
 
 const kubeConfig = new KubeConfig()
 kubeConfig.loadFromDefault()
@@ -42,7 +41,7 @@ export function* keepRolesInSync() {
         logger.debug("roles in cluster managed by terje:", rolesInCluster)
 
         yield call(syncRoles, rolesInCluster, state)
-        yield delay(60*1000)
+        yield delay(60 * 1000)
     }
 }
 

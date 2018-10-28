@@ -1,9 +1,9 @@
-import { V1ObjectMeta, V1Role } from '@kubernetes/client-node'
-import { addResourceToRole, removeResourceFromRole, createRole } from './creator'
-import { getResourceTypeFromSelfLink, getTeamFromMetadata } from '../helpers'
-import { RoleState, ResourceAction } from './types'
-import { EVENT_RESOURCE_ADDED, EVENT_RESOURCE_DELETED, EVENT_RESOURCE_MODIFIED } from '../resourcewatcher/events'
-import parentLogger from '../logger'
+import { V1ObjectMeta } from '@kubernetes/client-node';
+import { getResourceTypeFromSelfLink, getTeamFromMetadata } from '../helpers';
+import parentLogger from '../logger';
+import { EVENT_RESOURCE_ADDED, EVENT_RESOURCE_DELETED, EVENT_RESOURCE_MODIFIED } from '../resourcewatcher/events';
+import { addResourceToRole, createRole, removeResourceFromRole } from './creator';
+import { ResourceAction, RoleState } from './types';
 
 const logger = parentLogger.child({ module: "role" })
 

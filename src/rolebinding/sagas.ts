@@ -1,15 +1,13 @@
-import {KubeConfig, RbacAuthorization_v1Api, Core_v1Api, V1Namespace} from '@kubernetes/client-node'
-import {getRegisteredTeamsFromSharepoint} from './azure'
-
-import parentLogger from "../logger"
-import {createRoleBindingResource} from "./creator"
-import { call } from 'redux-saga/effects'
-import { delay } from 'redux-saga'
-import { Group } from './types'
-import bodyParser = require('body-parser')
+import { Core_v1Api, KubeConfig, RbacAuthorization_v1Api } from '@kubernetes/client-node';
+import { delay } from 'redux-saga';
+import { call } from 'redux-saga/effects';
 import { byLabelValueCaseInsensitive } from '../helpers';
+import parentLogger from "../logger";
+import { getRegisteredTeamsFromSharepoint } from './azure';
+import { createRoleBindingResource } from "./creator";
+import { Group } from './types';
 
-const logger = parentLogger.child({module: 'rolebinding'})
+const logger = parentLogger.child({ module: 'rolebinding' })
 
 const kubeConfig = new KubeConfig()
 kubeConfig.loadFromDefault()

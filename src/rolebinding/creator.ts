@@ -1,5 +1,5 @@
-import {V1RoleBinding, V1RoleRef, V1Subject} from '@kubernetes/client-node'
-import {createObjectMeta} from "../helpers"
+import { V1RoleBinding, V1RoleRef, V1Subject } from '@kubernetes/client-node';
+import { createObjectMeta } from "../helpers";
 
 function createRoleRef(teamName: string): V1RoleRef {
     const ref: V1RoleRef = new V1RoleRef()

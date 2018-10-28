@@ -1,10 +1,10 @@
-import {buffers, END, eventChannel} from "redux-saga"
-import {resourceAdded, resourceDeleted} from "./events"
-import {KubeConfig, Watch} from "@kubernetes/client-node"
+import { KubeConfig, Watch } from "@kubernetes/client-node";
+import { buffers, END, eventChannel } from "redux-saga";
+import parentLogger from "../logger";
+import { resourceAdded, resourceDeleted } from "./events";
 
-import parentLogger from "../logger"
 
-const logger = parentLogger.child({module: 'resourcewatcher'})
+const logger = parentLogger.child({ module: 'resourcewatcher' })
 
 export function watchApiResources() {
     let apis = [
@@ -24,37 +24,37 @@ export function watchApiResources() {
     ]
 
     return eventChannel(emitter => {
-            let kubeConfig = new KubeConfig()
-            kubeConfig.loadFromDefault()
-            logger.debug(kubeConfig)
+        let kubeConfig = new KubeConfig()
+        kubeConfig.loadFromDefault()
+        logger.debug(kubeConfig)
 
-            let watch = new Watch(kubeConfig)
+        let watch = new Watch(kubeConfig)
 
-            let watchers = apis.map(api => {
-                return watch.watch(api,
-                    {"labelSelector": "team"},
-                    (type: string, obj: any) => {
-                        logger.debug("type:", type, "obj:", obj)
-                        switch (type) {
-                            case 'MODIFIED':
-                                return emitter(resourceAdded(obj.metadata))
-                            case 'ADDED':
-                                return emitter(resourceAdded(obj.metadata))
-                            case 'DELETED':
-                                return emitter(resourceDeleted(obj.metadata.name))
-                        }
-                    },
+        let watchers = apis.map(api => {
+            return watch.watch(api,
+                { "labelSelector": "team" },
+                (type: string, obj: any) => {
+                    logger.debug("type:", type, "obj:", obj)
+                    switch (type) {
+                        case 'MODIFIED':
+                            return emitter(resourceAdded(obj.metadata))
+                        case 'ADDED':
+                            return emitter(resourceAdded(obj.metadata))
+                        case 'DELETED':
+                            return emitter(resourceDeleted(obj.metadata.name))
+                    }
+                },
 
-                    (err: any) => {
-                        emitter(END)
-                        if (err) {
-                            logger.warn(err, err.stack)
-                        }
-                    })
-            })
+                (err: any) => {
+                    emitter(END)
+                    if (err) {
+                        logger.warn(err, err.stack)
+                    }
+                })
+        })
 
-            return () => watchers.forEach(watcher => watcher.abort())
-        },
+        return () => watchers.forEach(watcher => watcher.abort())
+    },
         buffers.expanding(10) // We need to explicitly specify a buffer as eventChanel by default does not buffer anything.
     )
 }

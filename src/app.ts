@@ -1,11 +1,11 @@
-import { applyMiddleware, combineReducers, createStore } from "redux"
-import createSagaMiddleware from 'redux-saga'
-import rootSaga from './sagas'
-import { role } from './role/reducer'
-import express from 'express'
+import express from 'express';
+import { collectDefaultMetrics, register } from "prom-client";
+import { applyMiddleware, combineReducers, createStore } from "redux";
+import createSagaMiddleware from 'redux-saga';
+import parentLogger from "./logger";
+import { role } from './role/reducer';
+import rootSaga from './sagas';
 
-import parentLogger from "./logger"
-import { register, collectDefaultMetrics } from "prom-client"
 
 // Probe every 5th second.
 collectDefaultMetrics({ timeout: 5000 })
