@@ -1,4 +1,4 @@
-import { replaceRole, keepRolesInSync, fetchRoles, syncRoles } from './sagas'
+import { createOrUpdateRole, keepRolesInSync, fetchRoles, syncRoles } from './sagas'
 import { call, select } from 'redux-saga/effects'
 import { createRole } from "./creator"
 import { KubeConfig, RbacAuthorization_v1Api, V1RoleList } from "@kubernetes/client-node"
@@ -70,7 +70,7 @@ test('test create or update role saga', () => {
         body: mockRole
     }
 
-    const gen = replaceRole(mockRole)
+    const gen = createOrUpdateRole(mockRole)
     expect(gen.next().value).toEqual(
         call([rbacApi, rbacApi.replaceNamespacedRole], `nais:team:${team}`, namespace, mockRole)
     )
@@ -94,7 +94,7 @@ test('test create or update role saga error handling', () => {
         }
     }
 
-    const gen = replaceRole(mockRole)
+    const gen = createOrUpdateRole(mockRole)
     expect(gen.next().value).toEqual(
         call([rbacApi, rbacApi.replaceNamespacedRole], `nais:team:${team}`, namespace, mockRole)
     )
