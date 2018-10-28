@@ -20,15 +20,27 @@ export function createObjectMeta(name: string, namespace: string) {
     metadata.name = name
     metadata.namespace = namespace
 
-    return ensureManagedByTerje(metadata)
+    return setManagedByTerjeLabel(metadata)
 }
 
-export function ensureManagedByTerje(metadata: V1ObjectMeta): V1ObjectMeta {
-    if (!(metadata.labels)) {
-        metadata.labels = {"managed-by": "terje"}
+export function byLabelValueCaseInsensitive(key: string, value: string) {
+    return (obj: { metadata: V1ObjectMeta }) => {
+        return obj &&
+            obj.metadata &&
+            obj.metadata.labels &&
+            obj.metadata.labels.hasOwnProperty(key) &&
+            obj.metadata.labels[key.toLowerCase()] === value.toLowerCase()
+    }
+}
+
+export function setManagedByTerjeLabel(metadata: V1ObjectMeta): V1ObjectMeta {
+    let metadataCopy = Object.assign({}, metadata)
+
+    if (!(metadataCopy.labels)) {
+        metadataCopy.labels = {"managed-by": "terje"}
     } else {
-        metadata.labels["managed-by"] = "terje"
+        metadataCopy.labels["managed-by"] = "terje"
     }
 
-    return metadata
+    return metadataCopy
 }

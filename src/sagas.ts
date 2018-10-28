@@ -5,10 +5,6 @@ import { watchApiResources } from "./resourcewatcher/eventChannel"
 import { addResourceToState, keepRolesInSync } from "./role/sagas"
 import { keepRoleBindingsInSync } from "./rolebinding/sagas"
 import { watchResourceEvents } from "./resourcewatcher/sagas"
-
-
-const logger = parentLogger.child({ module: 'main' })
-
 export default function* rootSaga() {
     yield all([
         watchResourceEvents(),

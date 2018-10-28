@@ -7,6 +7,7 @@ import { call } from 'redux-saga/effects'
 import { delay } from 'redux-saga'
 import { Group } from './types'
 import bodyParser = require('body-parser')
+import { byLabelValueCaseInsensitive } from '../helpers';
 
 const logger = parentLogger.child({module: 'rolebinding'})
 
@@ -41,13 +42,9 @@ function createRoleBinding(team: string, groupId: string, namespace: string) {
 async function getNamespaces() {
     const response = await coreApi.listNamespace()
     if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
-        return response.body.items.filter(namespace => {
-            return namespace &&
-                namespace.metadata &&
-                namespace.metadata.labels &&
-                namespace.metadata.labels.hasOwnProperty('terje') &&
-                namespace.metadata.labels['terje'].toLowerCase() == 'enabled'
-        }).map(namespace => namespace.metadata.name)
+        return response.body.items
+            .filter(byLabelValueCaseInsensitive('terje', 'enabled'))
+            .map(namespace => namespace.metadata.name)
     }
     else {
         logger.warn("failed getting namespaces, reponse was: ", response)

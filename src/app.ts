@@ -10,7 +10,7 @@ import { register, collectDefaultMetrics } from "prom-client"
 // Probe every 5th second.
 collectDefaultMetrics({ timeout: 5000 })
 
-const logger = parentLogger.child({ module: 'main' })
+const logger = parentLogger.child({ module: 'app' })
 
 const sagaMiddleware = createSagaMiddleware()
 
