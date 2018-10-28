@@ -31,14 +31,12 @@ jobs:
       - deploy:
           name: docker push
           command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              git_tag=$(git describe --tags)
-              echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USER}" --password-stdin
-              docker tag app "navikt/terje:${CIRCLE_SHA1}"
-              docker push "navikt/terje:${CIRCLE_SHA1}"
-              docker tag app "navikt/terje:${git_tag}"
-              docker push "navikt/terje:${git_tag}"
-            fi
+            git_tag=$(git describe --tags)
+            echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USER}" --password-stdin
+            docker tag app "navikt/terje:${CIRCLE_SHA1}"
+            docker push "navikt/terje:${CIRCLE_SHA1}"
+            docker tag app "navikt/terje:${git_tag}"
+            docker push "navikt/terje:${git_tag}"
 workflows:
   version: 2
   main:
