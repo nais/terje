@@ -76,6 +76,10 @@ test('test create or update role saga', () => {
     )
 
     expect(gen.next(mockRoleResponse).value).toEqual(
+        delay(100)
+    )
+
+    expect(gen.next().value).toEqual(
         true
     )
 
@@ -96,6 +100,10 @@ test('test create or update role saga error handling', () => {
     )
 
     expect(gen.next(mockRoleResponse).value).toEqual(
+        delay(100)
+    )
+
+    expect(gen.next().value).toEqual(
         false
     )
 

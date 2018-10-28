@@ -1,6 +1,8 @@
 import { KubeConfig, RbacAuthorization_v1Api, V1Role } from '@kubernetes/client-node';
 import { delay } from 'bluebird';
+import deepEqual from 'deep-equal';
 import { call, put, select } from 'redux-saga/effects';
+import { byLabelValueCaseInsensitive } from '../helpers';
 import parentLogger from "../logger";
 import { RbacApiRoleResponse, ResourceAction, RoleState, selectRoleState } from './types';
 
@@ -17,20 +19,29 @@ export function* addResourceToState(event: ResourceAction) {
 }
 
 export function* syncRoles(rolesInCluster: [V1Role], state: RoleState) {
+    logger.info("Syncing Roles")
+    const updatedRoles = []
+    const equalRoles = []
+
     for (let namespace of Object.keys(state)) {
         const rolesInNamespace = rolesInCluster.filter(role => role.metadata.namespace == namespace)
         for (let team of Object.keys(state[namespace])) {
             const roleInState = state[namespace][team]
             const roleInCluster = rolesInNamespace.filter(role => role.metadata.name == roleInState.metadata.name)
             if (roleInCluster.length == 0) {
-                yield call(replaceRole, roleInState)
-            } else if (JSON.stringify(roleInState.rules) != JSON.stringify(roleInCluster[0].rules)) {
-                yield call(replaceRole, roleInState)
+                yield call(createOrUpdateRole, roleInState)
+                updatedRoles.push(`${roleInState.metadata.name}.${roleInState.metadata.namespace}`)
+            } else if (!deepEqual(roleInState.rules, roleInCluster[0].rules)) {
+                yield call(createOrUpdateRole, roleInState)
+                updatedRoles.push(`${roleInState.metadata.name}.${roleInState.metadata.namespace}`)
             } else {
-                // roles are equal
+                equalRoles.push(`${roleInState.metadata.name}.${roleInState.metadata.namespace}`)
             }
         }
     }
+
+    logger.info(`Updated ${updatedRoles.length} roles: ${updatedRoles}`)
+    logger.info(`Skipped ${equalRoles.length} equal roles: ${equalRoles}`)
 }
 
 export function* keepRolesInSync() {
@@ -45,29 +56,12 @@ export function* keepRolesInSync() {
     }
 }
 
-export function* fetchRoles() {
-    try {
-        const response = yield call([rbacApi, rbacApi.listRoleForAllNamespaces])
-        const rolesInCluster = response.body.items.filter((role: V1Role) => {
-            return role && role.metadata && role.metadata.labels &&
-                role.metadata.labels.hasOwnProperty('managed-by') &&
-                role.metadata.labels['managed-by'] === 'terje'
-        })
-
-        return rolesInCluster
-    } catch (e) {
-        logger.warn('could not fetch roles due to unhandled exception', e)
-        return
-    }
-}
-
-export function* replaceRole(role: V1Role) {
+export function* createOrUpdateRole(role: V1Role) {
     try {
         const response: RbacApiRoleResponse =
             yield call([rbacApi, rbacApi.replaceNamespacedRole], role.metadata.name, role.metadata.namespace, role)
-
+        yield delay(100)
         if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
-            logger.info('updated Role for team: %s in namespace: %s', role.metadata.name, role.metadata.namespace)
             return true
         } else {
             logger.warn('failed to replace role', response.response.statusMessage)
@@ -77,4 +71,16 @@ export function* replaceRole(role: V1Role) {
     }
 
     return false
+}
+
+export function* fetchRoles() {
+    try {
+        const response = yield call([rbacApi, rbacApi.listRoleForAllNamespaces])
+        const rolesInCluster = response.body.items.filter(byLabelValueCaseInsensitive('managed-by', 'terje'))
+
+        return rolesInCluster
+    } catch (e) {
+        logger.warn('could not fetch roles due to unhandled exception', e)
+        return
+    }
 }
