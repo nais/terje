@@ -20,10 +20,10 @@ function* createOrUpdateRoleBinding(roleBinding: V1RoleBinding) {
         const response =
             yield call([rbacApi, rbacApi.replaceNamespacedRoleBinding], roleBinding.metadata.name, roleBinding.metadata.namespace, roleBinding)
         yield delay(100)
-        if (response.response.statuscode >= 200 && response.response.statuscode < 300) {
+        if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
             return true
         } else {
-            logger.warn('failed to replace roleBinding', response.response.statusmessage)
+            logger.warn('failed to replace RoleBinding', response.response.statusMessage)
         }
     } catch (e) {
         logger.warn('caught exception while replacing roleBinding', e, e.stack)
@@ -35,11 +35,11 @@ function* createOrUpdateClusterRoleBinding(clusterRoleBinding: V1ClusterRoleBind
         const response =
             yield call([rbacApi, rbacApi.replaceClusterRoleBinding], clusterRoleBinding.metadata.name, clusterRoleBinding)
         yield delay(100)
-        if (response.response.statuscode >= 200 && response.response.statuscode < 300) {
+        if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
             logger.debug('create ClusterRoleBinding', clusterRoleBinding)
             return true
         } else {
-            logger.warn('failed to replace ClusterRoleBinding', response.response.statusmessage)
+            logger.warn('failed to replace ClusterRoleBinding', response.response.statusMessage)
         }
     } catch (e) {
         logger.warn('caught exception while replacing ClusterRoleBinding', e, e.stack)
@@ -71,17 +71,17 @@ function* syncClusterRoleBindings(clusterRoleBindingsInCluster: V1ClusterRoleBin
         ]
 
         for (let clusterRoleBindingToCreate of clusterRoleBindingsToCreate) {
-            const existingClusterRoleBindings = clusterRoleBindingsInCluster.filter(crb => crb.metadata.name == crb.metadata.name)
+            const existingClusterRoleBindings = clusterRoleBindingsInCluster.filter(crb => crb.metadata.name === clusterRoleBindingToCreate.metadata.name)
 
             if (existingClusterRoleBindings.length === 0) {
-                updatedClusterRoleBindings.push(`${clusterRoleBindingToCreate.metadata.name}${clusterRoleBindingToCreate.metadata.namespace}`)
+                updatedClusterRoleBindings.push(`${clusterRoleBindingToCreate.metadata.name}`)
                 yield call(createOrUpdateClusterRoleBinding, clusterRoleBindingToCreate)
             } else if (!deepEqual(clusterRoleBindingToCreate.roleRef, existingClusterRoleBindings[0].roleRef) ||
                 !deepEqual(clusterRoleBindingToCreate.subjects, existingClusterRoleBindings[0].subjects)) {
-                updatedClusterRoleBindings.push(`${clusterRoleBindingToCreate.metadata.name}${clusterRoleBindingToCreate.metadata.namespace}`)
+                updatedClusterRoleBindings.push(`${clusterRoleBindingToCreate.metadata.name}`)
                 yield call(createOrUpdateClusterRoleBinding, clusterRoleBindingToCreate)
             } else {
-                equalClusterRoleBindings.push(`${clusterRoleBindingToCreate.metadata.name}${clusterRoleBindingToCreate.metadata.namespace}`)
+                equalClusterRoleBindings.push(`${clusterRoleBindingToCreate.metadata.name}`)
             }
         }
     }
@@ -143,21 +143,21 @@ export function* fetchClusterRoleBindings() {
 }
 
 export function* keepRoleBindingsInSync() {
-    let teams: [Group]
-    let namespaces: [string]
-    let roleBindingsInCluster: [V1RoleBinding]
-    let clusterRoleBindingsInCluster: [V1ClusterRoleBinding]
+    let teams: Group[]
+    let namespaces: string[]
+    let roleBindingsInCluster: V1RoleBinding[]
+    let clusterRoleBindingsInCluster: V1ClusterRoleBinding[]
 
     while (true) {
         try {
             teams = yield getRegisteredTeamsFromSharepoint()
             namespaces = yield fetchNamespaces()
             roleBindingsInCluster = yield fetchRoleBindings();
-            roleBindingsInCluster = yield fetchClusterRoleBindings();
+            clusterRoleBindingsInCluster = yield fetchClusterRoleBindings();
             logger.debug("groups", teams)
             logger.debug("namespaces", namespaces)
-            yield call(syncRoleBindings, namespaces, roleBindingsInCluster, teams)
             yield call(syncClusterRoleBindings, clusterRoleBindingsInCluster, teams)
+            yield call(syncRoleBindings, namespaces, roleBindingsInCluster, teams)
         } catch (e) {
             logger.warn("error caught while syncing groups", e)
         }
