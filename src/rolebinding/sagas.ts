@@ -102,14 +102,14 @@ function* syncRoleBindings(namespaces: string[], roleBindingsInCluster: V1RoleBi
             const roleBindingInNamespace = roleBindingsInNamespace.filter(roleBinding => roleBinding.metadata.name == roleBindingToCreate.metadata.name)
 
             if (roleBindingInNamespace.length === 0) {
-                updatedRoleBindings.push(`${roleBindingToCreate.metadata.name}${roleBindingToCreate.metadata.namespace}`)
+                updatedRoleBindings.push(`${roleBindingToCreate.metadata.name}.${roleBindingToCreate.metadata.namespace}`)
                 yield call(createOrUpdateRoleBinding, roleBindingToCreate)
             } else if (!deepEqual(roleBindingToCreate.roleRef, roleBindingInNamespace[0].roleRef) ||
                 !deepEqual(roleBindingToCreate.subjects, roleBindingInNamespace[0].subjects)) {
-                updatedRoleBindings.push(`${roleBindingToCreate.metadata.name}${roleBindingToCreate.metadata.namespace}`)
+                updatedRoleBindings.push(`${roleBindingToCreate.metadata.name}.${roleBindingToCreate.metadata.namespace}`)
                 yield call(createOrUpdateRoleBinding, roleBindingToCreate)
             } else {
-                equalRoleBindings.push(`${roleBindingToCreate.metadata.name}${roleBindingToCreate.metadata.namespace}`)
+                equalRoleBindings.push(`${roleBindingToCreate.metadata.name}.${roleBindingToCreate.metadata.namespace}`)
             }
         }
     }
