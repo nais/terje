@@ -11,6 +11,8 @@ export function add(state: RoleState, meta: V1ObjectMeta) {
     if (!meta) return state
 
     const team = getTeamFromMetadata(meta.labels)
+    if (!team || team.length == 0) return state
+
     const resourceType = getResourceTypeFromSelfLink(meta.selfLink)
 
     if (!state.hasOwnProperty(meta.namespace)) {
@@ -31,6 +33,7 @@ export function del(state: RoleState, meta: V1ObjectMeta) {
     if (!meta) return state
 
     const team = getTeamFromMetadata(meta.labels)
+    if (!team || team.length == 0) return state
     const resourceType = getResourceTypeFromSelfLink(meta.selfLink)
 
     if (!state.hasOwnProperty(meta.namespace)) {
