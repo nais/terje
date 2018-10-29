@@ -1,10 +1,10 @@
-import { Core_v1Api, KubeConfig, RbacAuthorization_v1Api, V1Namespace, V1RoleBinding } from '@kubernetes/client-node';
+import { Core_v1Api, KubeConfig, RbacAuthorization_v1Api, V1ClusterRoleBinding, V1RoleBinding } from '@kubernetes/client-node';
 import { delay } from 'redux-saga';
 import { call } from 'redux-saga/effects';
 import { byLabelValueCaseInsensitive } from '../helpers';
 import parentLogger from "../logger";
 import { getRegisteredTeamsFromSharepoint } from './azure';
-import { createRoleBindingResource } from "./creator";
+import { createClusterRoleBindingResource, createRoleBindingResource } from "./creator";
 import { Group } from './types';
 import deepEqual = require('deep-equal');
 
@@ -30,6 +30,22 @@ function* createOrUpdateRoleBinding(roleBinding: V1RoleBinding) {
     }
 }
 
+function* createOrUpdateClusterRoleBinding(clusterRoleBinding: V1ClusterRoleBinding) {
+    try {
+        const response =
+            yield call([rbacApi, rbacApi.replaceClusterRoleBinding], clusterRoleBinding.metadata.name, clusterRoleBinding)
+        yield delay(100)
+        if (response.response.statuscode >= 200 && response.response.statuscode < 300) {
+            logger.debug('create ClusterRoleBinding', clusterRoleBinding)
+            return true
+        } else {
+            logger.warn('failed to replace ClusterRoleBinding', response.response.statusmessage)
+        }
+    } catch (e) {
+        logger.warn('caught exception while replacing ClusterRoleBinding', e, e.stack)
+    }
+}
+
 async function fetchNamespaces() {
     const response = await coreApi.listNamespace()
     if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
@@ -43,6 +59,37 @@ async function fetchNamespaces() {
     }
 }
 
+function* syncClusterRoleBindings(clusterRoleBindingsInCluster: V1ClusterRoleBinding[], teams: Group[]) {
+    logger.info("Syncing ClusterRoleBindings")
+    const updatedClusterRoleBindings: string[] = []
+    const equalClusterRoleBindings: string[] = []
+
+    for (let team of teams) {
+        const clusterRoleBindingsToCreate: V1ClusterRoleBinding[] = [
+            createClusterRoleBindingResource(`nais:team:${team.team}`, 'nais:team', 'ClusterRole', [{ name: team.team, type: 'User' }, { name: team.id, type: 'Group' }]),
+            createClusterRoleBindingResource(`nais:team:${team.team}:view`, 'view', 'ClusterRole', [{ name: team.team, type: 'User' }, { name: team.id, type: 'Group' }])
+        ]
+
+        for (let clusterRoleBindingToCreate of clusterRoleBindingsToCreate) {
+            const existingClusterRoleBindings = clusterRoleBindingsInCluster.filter(crb => crb.metadata.name == crb.metadata.name)
+
+            if (existingClusterRoleBindings.length === 0) {
+                updatedClusterRoleBindings.push(`${clusterRoleBindingToCreate.metadata.name}${clusterRoleBindingToCreate.metadata.namespace}`)
+                yield call(createOrUpdateClusterRoleBinding, clusterRoleBindingToCreate)
+            } else if (!deepEqual(clusterRoleBindingToCreate.roleRef, existingClusterRoleBindings[0].roleRef) ||
+                !deepEqual(clusterRoleBindingToCreate.subjects, existingClusterRoleBindings[0].subjects)) {
+                updatedClusterRoleBindings.push(`${clusterRoleBindingToCreate.metadata.name}${clusterRoleBindingToCreate.metadata.namespace}`)
+                yield call(createOrUpdateClusterRoleBinding, clusterRoleBindingToCreate)
+            } else {
+                equalClusterRoleBindings.push(`${clusterRoleBindingToCreate.metadata.name}${clusterRoleBindingToCreate.metadata.namespace}`)
+            }
+        }
+    }
+
+    logger.info(`Updated ${updatedClusterRoleBindings.length} ClusterRoleBindings: ${updatedClusterRoleBindings}`)
+    logger.info(`Skipped ${equalClusterRoleBindings.length} equal ClusterRoleBindings: ${equalClusterRoleBindings}`)
+}
+
 function* syncRoleBindings(namespaces: string[], roleBindingsInCluster: V1RoleBinding[], teams: Group[]) {
     logger.info("Syncing RoleBindings")
     const updatedRoleBindings: string[] = []
@@ -51,15 +98,15 @@ function* syncRoleBindings(namespaces: string[], roleBindingsInCluster: V1RoleBi
     for (let namespace of namespaces) {
         const roleBindingsInNamespace = roleBindingsInCluster.filter(roleBinding => roleBinding.metadata.namespace == namespace)
         for (let team of teams) {
-            const roleBindingToCreate = createRoleBindingResource(team.team, team.id, namespace)
+            const roleBindingToCreate = createRoleBindingResource(`nais:team:${team.team}`, `nais:team:${team.team}`, 'Role', [{ name: team.id, type: 'Group' }], namespace)
             const roleBindingInNamespace = roleBindingsInNamespace.filter(roleBinding => roleBinding.metadata.name == roleBindingToCreate.metadata.name)
 
             if (roleBindingInNamespace.length === 0) {
-                equalRoleBindings.push(`${roleBindingToCreate.metadata.name}${roleBindingToCreate.metadata.namespace}`)
+                updatedRoleBindings.push(`${roleBindingToCreate.metadata.name}${roleBindingToCreate.metadata.namespace}`)
                 yield call(createOrUpdateRoleBinding, roleBindingToCreate)
             } else if (!deepEqual(roleBindingToCreate.roleRef, roleBindingInNamespace[0].roleRef) ||
                 !deepEqual(roleBindingToCreate.subjects, roleBindingInNamespace[0].subjects)) {
-                equalRoleBindings.push(`${roleBindingToCreate.metadata.name}${roleBindingToCreate.metadata.namespace}`)
+                updatedRoleBindings.push(`${roleBindingToCreate.metadata.name}${roleBindingToCreate.metadata.namespace}`)
                 yield call(createOrUpdateRoleBinding, roleBindingToCreate)
             } else {
                 equalRoleBindings.push(`${roleBindingToCreate.metadata.name}${roleBindingToCreate.metadata.namespace}`)
@@ -67,8 +114,8 @@ function* syncRoleBindings(namespaces: string[], roleBindingsInCluster: V1RoleBi
         }
     }
 
-    logger.info(`Updated ${updatedRoleBindings.length} roleBindings: ${updatedRoleBindings}`)
-    logger.info(`Skipped ${equalRoleBindings.length} equal roleBindings: ${equalRoleBindings}`)
+    logger.info(`Updated ${updatedRoleBindings.length} RoleBindings: ${updatedRoleBindings}`)
+    logger.info(`Skipped ${equalRoleBindings.length} equal RoleBindings: ${equalRoleBindings}`)
 }
 
 export function* fetchRoleBindings() {
@@ -78,7 +125,19 @@ export function* fetchRoleBindings() {
 
         return roleBindingsInCluster
     } catch (e) {
-        logger.warn('could not fetch rolebindings due to unhandled exception', e)
+        logger.warn('could not fetch RoleBindings due to unhandled exception', e)
+        return
+    }
+}
+
+export function* fetchClusterRoleBindings() {
+    try {
+        const response = yield call([rbacApi, rbacApi.listClusterRoleBinding])
+        const clusterRoleBindingsInCluster = response.body.items.filter(byLabelValueCaseInsensitive('managed-by', 'terje'))
+
+        return clusterRoleBindingsInCluster
+    } catch (e) {
+        logger.warn('could not fetch ClusterRoleBindings due to unhandled exception', e)
         return
     }
 }
@@ -87,15 +146,18 @@ export function* keepRoleBindingsInSync() {
     let teams: [Group]
     let namespaces: [string]
     let roleBindingsInCluster: [V1RoleBinding]
+    let clusterRoleBindingsInCluster: [V1ClusterRoleBinding]
 
     while (true) {
         try {
             teams = yield getRegisteredTeamsFromSharepoint()
             namespaces = yield fetchNamespaces()
             roleBindingsInCluster = yield fetchRoleBindings();
+            roleBindingsInCluster = yield fetchClusterRoleBindings();
             logger.debug("groups", teams)
             logger.debug("namespaces", namespaces)
             yield call(syncRoleBindings, namespaces, roleBindingsInCluster, teams)
+            yield call(syncClusterRoleBindings, clusterRoleBindingsInCluster, teams)
         } catch (e) {
             logger.warn("error caught while syncing groups", e)
         }

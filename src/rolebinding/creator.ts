@@ -1,12 +1,12 @@
 import { V1RoleBinding, V1RoleRef, V1Subject } from '@kubernetes/client-node';
 import { createObjectMeta } from "../helpers";
 
-function createRoleRef(teamName: string): V1RoleRef {
+function createRoleRef(roleName: string, roleType: string): V1RoleRef {
     const ref: V1RoleRef = new V1RoleRef()
 
-    ref.name = 'nais:team:' + teamName
+    ref.name = roleName
     ref.apiGroup = 'rbac.authorization.k8s.io'
-    ref.kind = 'Role'
+    ref.kind = roleType
 
     return ref
 }
@@ -21,15 +21,22 @@ function createSubject(subjectId: string, kind: string) {
     return subject
 }
 
-export function createRoleBindingResource(team: string, groupId: string, namespace: string): V1RoleBinding {
+export function createRoleBindingResource(roleBindingName: string, roleName: string, roleType: string, subjects: {name: string, type: string}[], namespace: string): V1RoleBinding {
     const roleBinding: V1RoleBinding = new V1RoleBinding()
 
-    const machineUser = createSubject(team, 'User')
-    const teamGroup = createSubject(groupId, 'Group')
+    roleBinding.metadata = createObjectMeta(roleBindingName, namespace)
+    roleBinding.roleRef = createRoleRef(roleName, roleType)
+    roleBinding.subjects = subjects.map(subject => createSubject(subject.name, subject.type))
 
-    roleBinding.metadata = createObjectMeta('nais:team:' + team, namespace)
-    roleBinding.roleRef = createRoleRef(team)
-    roleBinding.subjects = [machineUser, teamGroup]
+    return roleBinding
+}
+
+export function createClusterRoleBindingResource(clusterRoleBindingName: string, roleName: string, roleType: string, subjects: {name: string, type: string}[]): V1RoleBinding {
+    const roleBinding: V1RoleBinding = new V1RoleBinding()
+
+    roleBinding.metadata = createObjectMeta(clusterRoleBindingName)
+    roleBinding.roleRef = createRoleRef(roleName, roleType)
+    roleBinding.subjects = subjects.map(subject => createSubject(subject.name, subject.type))
 
     return roleBinding
 }

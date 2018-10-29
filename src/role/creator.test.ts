@@ -1,5 +1,7 @@
 import { V1Role } from '@kubernetes/client-node';
 import { addResourceToRole, createRole, removeResourceFromRole } from './creator';
+import { AssertionError } from 'assert';
+import deepEqual = require('deep-equal');
 
 const team = "unittest"
 const namespace = 'namespace'

@@ -15,10 +15,12 @@ export function getResourceTypeFromSelfLink(selfLink: string) {
     return parts[parts.length - 2]
 }
 
-export function createObjectMeta(name: string, namespace: string) {
+export function createObjectMeta(name: string, namespace?: string) {
     const metadata = new V1ObjectMeta()
     metadata.name = name
-    metadata.namespace = namespace
+    if (namespace) {
+        metadata.namespace = namespace
+    }
 
     return setManagedByTerjeLabel(metadata)
 }
