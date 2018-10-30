@@ -6,6 +6,34 @@ import { resourceAdded, resourceDeleted, resourceModified } from "./events";
 
 const logger = parentLogger.child({ module: 'resourcewatcher' })
 
+function watchApiResource(watch: Watch, emitter: (input: {} | END) => void, api: string) {
+    return watch.watch(api,
+        { "labelSelector": "team" },
+        (type: string, obj: any) => {
+            logger.debug("type:", type, "resource:", `${obj.metadata.name}.${obj.metadata.namespace}`)
+            switch (type) {
+                //case 'MODIFIED':
+                //    return emitter(resourceModified(obj.metadata))
+                case 'ADDED':
+                    return emitter(resourceAdded(obj.metadata))
+                case 'DELETED':
+                    return emitter(resourceDeleted(obj.metadata))
+            }
+        },
+        (err: any) => {
+            logger.warn("watcher ended", api)
+            // emitter(END)
+            // restart all watchers?
+            // for now, just restart ended watcher:
+            logger.warn("starting watcher", api)
+            watchApiResource(watch, emitter, api)
+            if (err) {
+                logger.warn(err, err.stack)
+            }
+        })
+}
+
+
 export function watchApiResources() {
     let apis = [
         "/api/v1/pods",
@@ -30,29 +58,7 @@ export function watchApiResources() {
 
         let watch = new Watch(kubeConfig)
 
-        let watchers = apis.map(api => {
-            return watch.watch(api,
-                { "labelSelector": "team" },
-                (type: string, obj: any) => {
-                    logger.debug("type:", type, "resource:", `${obj.metadata.name}.${obj.metadata.namespace}`)
-                    switch (type) {
-                        //case 'MODIFIED':
-                        //    return emitter(resourceModified(obj.metadata))
-                        case 'ADDED':
-                            return emitter(resourceAdded(obj.metadata))
-                        case 'DELETED':
-                            return emitter(resourceDeleted(obj.metadata))
-                    }
-                },
-
-                (err: any) => {
-                    logger.warn("watcher ended", api)
-                    emitter(END)
-                    if (err) {
-                        logger.warn(err, err.stack)
-                    }
-                })
-        })
+        let watchers = apis.map(api => watchApiResource(watch, emitter, api))
 
         return () => watchers.forEach(watcher => watcher.abort())
     },
