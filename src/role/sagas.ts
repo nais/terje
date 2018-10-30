@@ -1,10 +1,10 @@
 import { KubeConfig, RbacAuthorization_v1Api, V1Role } from '@kubernetes/client-node';
-import { delay } from 'bluebird';
 import deepEqual from 'deep-equal';
 import { call, put, select } from 'redux-saga/effects';
 import { byLabelValueCaseInsensitive } from '../helpers';
 import parentLogger from "../logger";
 import { RbacApiRoleResponse, ResourceAction, RoleState, selectRoleState } from './types';
+import { delay } from 'redux-saga';
 
 
 const logger = parentLogger.child({ module: 'role' })
