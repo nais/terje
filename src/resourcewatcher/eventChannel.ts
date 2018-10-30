@@ -1,7 +1,7 @@
 import { KubeConfig, Watch } from "@kubernetes/client-node";
 import { buffers, END, eventChannel } from "redux-saga";
 import parentLogger from "../logger";
-import { resourceAdded, resourceDeleted } from "./events";
+import { resourceAdded, resourceDeleted, resourceModified } from "./events";
 
 
 const logger = parentLogger.child({ module: 'resourcewatcher' })
@@ -34,18 +34,19 @@ export function watchApiResources() {
             return watch.watch(api,
                 { "labelSelector": "team" },
                 (type: string, obj: any) => {
-                    logger.debug("type:", type, "obj:", obj)
+                    logger.debug("type:", type, "resource:", `${obj.metadata.name}.${obj.metadata.namespace}`)
                     switch (type) {
-                        case 'MODIFIED':
-                            return emitter(resourceAdded(obj.metadata))
+                        //case 'MODIFIED':
+                        //    return emitter(resourceModified(obj.metadata))
                         case 'ADDED':
                             return emitter(resourceAdded(obj.metadata))
                         case 'DELETED':
-                            return emitter(resourceDeleted(obj.metadata.name))
+                            return emitter(resourceDeleted(obj.metadata))
                     }
                 },
 
                 (err: any) => {
+                    logger.warn("watcher ended", api)
                     emitter(END)
                     if (err) {
                         logger.warn(err, err.stack)

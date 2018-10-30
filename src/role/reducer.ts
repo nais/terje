@@ -5,7 +5,7 @@ import { EVENT_RESOURCE_ADDED, EVENT_RESOURCE_DELETED, EVENT_RESOURCE_MODIFIED }
 import { addResourceToRole, createRole, removeResourceFromRole } from './creator';
 import { ResourceAction, RoleState } from './types';
 
-const logger = parentLogger.child({ module: "role" })
+const logger = parentLogger.child({ module: "rolereducer" })
 
 export function add(state: RoleState, meta: V1ObjectMeta) {
     if (!meta) return state
@@ -25,7 +25,7 @@ export function add(state: RoleState, meta: V1ObjectMeta) {
 
     state[meta.namespace][team] = addResourceToRole(state[meta.namespace][team], resourceType, meta.name)
 
-    logger.debug("added to state", state, meta)
+    logger.debug("added to state", meta.name, meta.namespace)
     return state
 }
 
@@ -46,25 +46,23 @@ export function del(state: RoleState, meta: V1ObjectMeta) {
 
     state[meta.namespace][team] = removeResourceFromRole(state[meta.namespace][team], resourceType, meta.name)
 
-    logger.debug("removed from state", state, meta)
+    logger.debug("removed from state", meta.name, meta.namespace)
     return state
 }
 
 export function role(state: RoleState = {}, action: ResourceAction) {
-    logger.debug("reducing state", state, action)
+    state = Object.assign({}, state)
+    logger.debug("got action", action.type, action)
     switch (action.type) {
         case EVENT_RESOURCE_ADDED:
-            logger.debug("added", state, action)
             return add(state, action.metadata)
         case EVENT_RESOURCE_DELETED:
-            logger.debug("deleted", state, action)
             return del(state, action.metadata)
         case EVENT_RESOURCE_MODIFIED:
-            logger.debug("modified", state, action)
             // TODO remove resource from other roles
             return add(state, action.metadata)
         default:
-            logger.debug("default", state, action)
+            logger.warn("Got unrecognized action", state, action)
             return state
     }
 }

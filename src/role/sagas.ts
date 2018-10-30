@@ -47,9 +47,9 @@ export function* syncRoles(rolesInCluster: [V1Role], state: RoleState) {
 export function* keepRolesInSync() {
     while (true) {
         const state: RoleState = yield select(selectRoleState)
-        const rolesInCluster = yield call(fetchRoles)
+        const rolesInCluster : V1Role[] = yield call(fetchRoles)
         logger.debug("roleState", state)
-        logger.debug("roles in cluster managed by terje:", rolesInCluster)
+        logger.debug("roles in cluster managed by terje:", rolesInCluster.map(r => `${r.metadata.name}.${r.metadata.namespace}`))
 
         yield call(syncRoles, rolesInCluster, state)
         yield delay(60 * 1000)
