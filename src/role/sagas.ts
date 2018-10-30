@@ -40,8 +40,8 @@ export function* syncRoles(rolesInCluster: [V1Role], state: RoleState) {
         }
     }
 
-    logger.info(`Updated ${updatedRoles.length} roles: ${updatedRoles}`)
-    logger.info(`Skipped ${equalRoles.length} equal roles: ${equalRoles}`)
+    logger.info(`Updated ${updatedRoles.length} roles`)
+    logger.info(`Skipped ${equalRoles.length} equal roles`)
 }
 
 export function* keepRolesInSync() {
