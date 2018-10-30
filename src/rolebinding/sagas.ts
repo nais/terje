@@ -22,6 +22,8 @@ function* createOrUpdateRoleBinding(roleBinding: V1RoleBinding) {
         yield delay(100)
         if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
             return true
+        } else if (response.response.statusCode == 404) {
+            return false
         } else {
             logger.warn('failed to replace RoleBinding', response.response.statusMessage)
         }
@@ -86,8 +88,8 @@ function* syncClusterRoleBindings(clusterRoleBindingsInCluster: V1ClusterRoleBin
         }
     }
 
-    logger.info(`Updated ${updatedClusterRoleBindings.length} ClusterRoleBindings: ${updatedClusterRoleBindings}`)
-    logger.info(`Skipped ${equalClusterRoleBindings.length} equal ClusterRoleBindings: ${equalClusterRoleBindings}`)
+    logger.info(`Updated ${updatedClusterRoleBindings.length} ClusterRoleBindings`)
+    logger.info(`Skipped ${equalClusterRoleBindings.length} equal ClusterRoleBindings`)
 }
 
 function* syncRoleBindings(namespaces: string[], roleBindingsInCluster: V1RoleBinding[], teams: Group[]) {
@@ -114,8 +116,8 @@ function* syncRoleBindings(namespaces: string[], roleBindingsInCluster: V1RoleBi
         }
     }
 
-    logger.info(`Updated ${updatedRoleBindings.length} RoleBindings: ${updatedRoleBindings}`)
-    logger.info(`Skipped ${equalRoleBindings.length} equal RoleBindings: ${equalRoleBindings}`)
+    logger.info(`Updated ${updatedRoleBindings.length} RoleBindings`)
+    logger.info(`Skipped ${equalRoleBindings.length} equal RoleBindings`)
 }
 
 export function* fetchRoleBindings() {
@@ -148,6 +150,8 @@ export function* keepRoleBindingsInSync() {
     let roleBindingsInCluster: V1RoleBinding[]
     let clusterRoleBindingsInCluster: V1ClusterRoleBinding[]
 
+    logger.info("Sleeping for 2 minutes before syncing to let the role state populate")
+    yield delay(60*2*1000)
     while (true) {
         try {
             teams = yield getRegisteredTeamsFromSharepoint()
