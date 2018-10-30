@@ -1,4 +1,4 @@
-import { Core_v1Api, KubeConfig, RbacAuthorization_v1Api, V1ClusterRoleBinding, V1RoleBinding } from '@kubernetes/client-node';
+import { Core_v1Api, KubeConfig, RbacAuthorization_v1Api, V1ClusterRoleBinding, V1RoleBinding, V1Namespace } from '@kubernetes/client-node';
 import { delay } from 'redux-saga';
 import { call } from 'redux-saga/effects';
 import { byLabelValueCaseInsensitive } from '../helpers';
@@ -28,7 +28,10 @@ function* createOrUpdateRoleBinding(roleBinding: V1RoleBinding) {
             logger.warn('failed to replace RoleBinding', response.response.statusMessage)
         }
     } catch (e) {
-        logger.warn('caught exception while replacing roleBinding', e, e.stack)
+        if (e.hasOwnProperty('response') && e.response.statusCode == 404) {
+            return false
+        }
+        logger.warn('caught exception while replacing RoleBinding', e, e.stack)
     }
 }
 
@@ -53,7 +56,7 @@ async function fetchNamespaces() {
     if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
         return response.body.items
             .filter(byLabelValueCaseInsensitive('terje', 'enabled'))
-            .map(namespace => namespace.metadata.name)
+            .map((namespace: V1Namespace) => namespace.metadata.name)
     }
     else {
         logger.warn("failed getting namespaces, reponse was: ", response)
