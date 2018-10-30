@@ -12,8 +12,8 @@ function watchApiResource(watch: Watch, emitter: (input: {} | END) => void, api:
         (type: string, obj: any) => {
             logger.debug("type:", type, "resource:", `${obj.metadata.name}.${obj.metadata.namespace}`)
             switch (type) {
-                //case 'MODIFIED':
-                //    return emitter(resourceModified(obj.metadata))
+                case 'MODIFIED':
+                    return emitter(resourceModified(obj.metadata))
                 case 'ADDED':
                     return emitter(resourceAdded(obj.metadata))
                 case 'DELETED':
