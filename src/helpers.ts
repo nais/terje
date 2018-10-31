@@ -9,10 +9,9 @@ export function getTeamFromMetadata(labels: { [key: string]: string }): string {
 }
 
 export function getResourceTypeFromSelfLink(selfLink: string): string {
-    // Example selfLink: '/api/v1/namespaces/aura/pods/debug-68cffcddb-vrstj'
     if (!selfLink) return
 
-    let parts = selfLink.split('/')
+    const parts = selfLink.split('/')
     return parts[parts.length - 2]
 }
 
