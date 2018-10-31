@@ -7,7 +7,12 @@ import { getRegisteredTeamsFromSharepoint } from './azure';
 import { createClusterRoleBindingResource, createRoleBindingResource } from "./creator";
 import { Group } from './types';
 import deepEqual = require('deep-equal');
+import promClient from 'prom-client'
 
+const rbCreatedCounter = new promClient.Counter({name: "rolebinding_created_counter", help: "Amount of created RoleBindings"})
+const rbFailedCounter = new promClient.Counter({name: "rolebinding_failed_counter", help: "Amount of failed RoleBindings"})
+const crbCreatedCounter = new promClient.Counter({name: "clusterrolebinding_created_counter", help: "Amount of created ClusterRoleBindings"})
+const crbFailedCounter = new promClient.Counter({name: "clusterrolebinding_failed_counter", help: "Amount of failed ClusterRoleBindings"})
 const logger = parentLogger.child({ module: 'rolebinding' })
 
 const kubeConfig = new KubeConfig()
@@ -21,13 +26,17 @@ function* createOrUpdateRoleBinding(roleBinding: V1RoleBinding) {
             yield call([rbacApi, rbacApi.replaceNamespacedRoleBinding], roleBinding.metadata.name, roleBinding.metadata.namespace, roleBinding)
         yield delay(100)
         if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
+            rbCreatedCounter.inc()
             return true
         } else if (response.response.statusCode == 404) {
+            rbFailedCounter.inc()
             return false
         } else {
+            rbFailedCounter.inc()
             logger.warn('failed to replace RoleBinding', response.response.statusMessage)
         }
     } catch (e) {
+        rbFailedCounter.inc()
         if (e.hasOwnProperty('response') && e.response.statusCode == 404) {
             return false
         }
@@ -41,12 +50,15 @@ function* createOrUpdateClusterRoleBinding(clusterRoleBinding: V1ClusterRoleBind
             yield call([rbacApi, rbacApi.replaceClusterRoleBinding], clusterRoleBinding.metadata.name, clusterRoleBinding)
         yield delay(100)
         if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
+            crbCreatedCounter.inc()
             logger.debug('create ClusterRoleBinding', clusterRoleBinding)
             return true
         } else {
+            crbFailedCounter.inc()
             logger.warn('failed to replace ClusterRoleBinding', response.response.statusMessage)
         }
     } catch (e) {
+        crbFailedCounter.inc()
         logger.warn('caught exception while replacing ClusterRoleBinding', e, e.stack)
     }
 }

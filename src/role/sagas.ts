@@ -1,13 +1,15 @@
 import { KubeConfig, RbacAuthorization_v1Api, V1Role } from '@kubernetes/client-node';
 import deepEqual from 'deep-equal';
+import promClient from 'prom-client';
+import { delay } from 'redux-saga';
 import { call, put, select } from 'redux-saga/effects';
 import { byLabelValueCaseInsensitive } from '../helpers';
 import parentLogger from "../logger";
 import { RbacApiRoleResponse, ResourceAction, RoleState, selectRoleState } from './types';
-import { delay } from 'redux-saga';
-
 
 const logger = parentLogger.child({ module: 'role' })
+const roleCreatedCounter = new promClient.Counter({ name: "role_create_counter", help: "Amount of roles created/updated" })
+const roleCreationFailedCounter = new promClient.Counter({ name: "role_creation_failed_counter", help: "Amount of roles that failed to create/update" })
 
 const kubeConfig = new KubeConfig()
 kubeConfig.loadFromDefault()
@@ -47,7 +49,7 @@ export function* syncRoles(rolesInCluster: [V1Role], state: RoleState) {
 export function* keepRolesInSync() {
     while (true) {
         const state: RoleState = yield select(selectRoleState)
-        const rolesInCluster : V1Role[] = yield call(fetchRoles)
+        const rolesInCluster: V1Role[] = yield call(fetchRoles)
         logger.debug("roleState", state)
         logger.debug("roles in cluster managed by terje:", rolesInCluster.map(r => `${r.metadata.name}.${r.metadata.namespace}`))
 
@@ -62,9 +64,11 @@ export function* createOrUpdateRole(role: V1Role) {
             yield call([rbacApi, rbacApi.replaceNamespacedRole], role.metadata.name, role.metadata.namespace, role)
         yield delay(100)
         if (response.response.statusCode >= 200 && response.response.statusCode < 300) {
+            roleCreatedCounter.inc()
             return true
         } else {
             logger.warn('failed to replace role', response.response.statusMessage)
+            roleCreationFailedCounter.inc()
         }
     } catch (e) {
         logger.warn('caught exception while replacing role', e, e.stack)
