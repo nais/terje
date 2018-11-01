@@ -9,10 +9,10 @@ import { Group } from './types';
 import deepEqual = require('deep-equal');
 import promClient from 'prom-client'
 
-const rbCreatedCounter = new promClient.Counter({name: "rolebinding_created_counter", help: "Amount of created RoleBindings"})
-const rbFailedCounter = new promClient.Counter({name: "rolebinding_failed_counter", help: "Amount of failed RoleBindings"})
-const crbCreatedCounter = new promClient.Counter({name: "clusterrolebinding_created_counter", help: "Amount of created ClusterRoleBindings"})
-const crbFailedCounter = new promClient.Counter({name: "clusterrolebinding_failed_counter", help: "Amount of failed ClusterRoleBindings"})
+const rbCreatedCounter = new promClient.Counter({ name: "rolebinding_created_counter", help: "Amount of created RoleBindings" })
+const rbFailedCounter = new promClient.Counter({ name: "rolebinding_failed_counter", help: "Amount of failed RoleBindings" })
+const crbCreatedCounter = new promClient.Counter({ name: "clusterrolebinding_created_counter", help: "Amount of created ClusterRoleBindings" })
+const crbFailedCounter = new promClient.Counter({ name: "clusterrolebinding_failed_counter", help: "Amount of failed ClusterRoleBindings" })
 const logger = parentLogger.child({ module: 'rolebinding' })
 
 const kubeConfig = new KubeConfig()
@@ -116,7 +116,7 @@ function* syncRoleBindings(namespaces: string[], roleBindingsInCluster: V1RoleBi
         const roleBindingsInNamespace = roleBindingsInCluster.filter(roleBinding => roleBinding.metadata.namespace == namespace)
         for (let team of teams) {
             const subjects = [{ name: team.id, type: 'Group' }, { name: team.team, type: 'User' }]
-            const roleBindingToCreate = createRoleBindingResource(`nais:team:${team.team}`, `nais:team:${team.team}`, 'Role', subjets, namespace)
+            const roleBindingToCreate = createRoleBindingResource(`nais:team:${team.team}`, `nais:team:${team.team}`, 'Role', subjects, namespace)
             const roleBindingInNamespace = roleBindingsInNamespace.filter(roleBinding => roleBinding.metadata.name == roleBindingToCreate.metadata.name)
 
             if (roleBindingInNamespace.length === 0) {
@@ -167,7 +167,7 @@ export function* keepRoleBindingsInSync() {
     let clusterRoleBindingsInCluster: V1ClusterRoleBinding[]
 
     logger.info("Sleeping for 2 minutes before syncing to let the role state populate")
-    yield delay(60*2*1000)
+    yield delay(60 * 2 * 1000)
     while (true) {
         try {
             teams = yield getRegisteredTeamsFromSharepoint()
