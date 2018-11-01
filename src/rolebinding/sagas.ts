@@ -115,7 +115,8 @@ function* syncRoleBindings(namespaces: string[], roleBindingsInCluster: V1RoleBi
     for (let namespace of namespaces) {
         const roleBindingsInNamespace = roleBindingsInCluster.filter(roleBinding => roleBinding.metadata.namespace == namespace)
         for (let team of teams) {
-            const roleBindingToCreate = createRoleBindingResource(`nais:team:${team.team}`, `nais:team:${team.team}`, 'Role', [{ name: team.id, type: 'Group' }], namespace)
+            const subjects = [{ name: team.id, type: 'Group' }, { name: team.team, type: 'User' }]
+            const roleBindingToCreate = createRoleBindingResource(`nais:team:${team.team}`, `nais:team:${team.team}`, 'Role', subjets, namespace)
             const roleBindingInNamespace = roleBindingsInNamespace.filter(roleBinding => roleBinding.metadata.name == roleBindingToCreate.metadata.name)
 
             if (roleBindingInNamespace.length === 0) {
