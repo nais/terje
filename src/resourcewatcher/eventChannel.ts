@@ -49,6 +49,7 @@ export function watchApiResources() {
         "/apis/extensions/v1beta1/ingresses",
         "/apis/autoscaling/v1/horizontalpodautoscalers",
         "/apis/nais.io/v1alpha1/applications",
+        "/apis/storage.spotahome.com/v1alpha2/redisfailovers",
     ]
 
     return eventChannel(emitter => {
