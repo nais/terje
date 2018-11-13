@@ -1,11 +1,30 @@
 import { V1PolicyRule, V1Role } from '@kubernetes/client-node';
 import { createObjectMeta, setManagedByTerjeLabel } from "../helpers";
 
+export const ruleTemplate: { [key: string]: { apiGroup: string[], verbs: string[] } } = {
+    "pods": {
+        "apiGroup": [""],
+        "verbs": ["delete", "exec"]
+    },
+    "configmaps": {
+        "apiGroup": [""],
+        "verbs": ["update", "patch", "delete"]
+    },
+    "applications": {
+        "apiGroup": ["nais.io"],
+        "verbs": ["update", "patch", "delete"],
+    },
+    "redisfailovers": {
+        "apiGroup": ["storage.spotahome.com"],
+        "verbs": ["update", "patch", "delete"],
+    }
+}
+
 function createInitialPolicyRule(resourceType: string, resourceName: string): V1PolicyRule {
     let rule: V1PolicyRule = new V1PolicyRule()
 
-    rule.apiGroups = ['*']
-    rule.verbs = ['*']
+    rule.apiGroups = ruleTemplate[resourceType]['apiGroup']
+    rule.verbs = ruleTemplate[resourceType]['verbs']
     rule.resources = [resourceType]
     rule.resourceNames = [resourceName]
 

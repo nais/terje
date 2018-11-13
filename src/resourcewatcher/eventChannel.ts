@@ -25,7 +25,7 @@ function watchApiResource(watch: Watch, emitter: (input: {} | END) => void, api:
             // emitter(END)
             // restart all watchers?
             // for now, just restart ended watcher:
-            logger.warn("starting watcher", api)
+            logger.warn("restarting watcher", api)
             watchApiResource(watch, emitter, api)
             if (err) {
                 logger.warn(err, err.stack)
@@ -33,21 +33,10 @@ function watchApiResource(watch: Watch, emitter: (input: {} | END) => void, api:
         })
 }
 
-
 export function watchApiResources() {
     let apis = [
         "/api/v1/pods",
         "/api/v1/configmaps",
-        "/api/v1/endpoints",
-        "/api/v1/resourcequotas",
-        "/api/v1/serviceaccounts",
-        "/api/v1/secrets",
-        "/api/v1/services",
-        "/apis/apps/v1/deployments",
-        "/apis/apps/v1/replicasets",
-        "/apis/apps/v1/statefulsets",
-        "/apis/extensions/v1beta1/ingresses",
-        "/apis/autoscaling/v1/horizontalpodautoscalers",
         "/apis/nais.io/v1alpha1/applications",
         "/apis/storage.spotahome.com/v1alpha2/redisfailovers",
     ]
@@ -58,7 +47,6 @@ export function watchApiResources() {
         logger.debug(kubeConfig)
 
         let watch = new Watch(kubeConfig)
-
         let watchers = apis.map(api => watchApiResource(watch, emitter, api))
 
         return () => watchers.forEach(watcher => watcher.abort())

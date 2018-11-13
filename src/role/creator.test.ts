@@ -1,5 +1,5 @@
 import { V1Role } from '@kubernetes/client-node';
-import { addResourceToRole, createRole, removeResourceFromRole } from './creator';
+import { addResourceToRole, createRole, removeResourceFromRole, ruleTemplate } from './creator';
 import { AssertionError } from 'assert';
 import deepEqual = require('deep-equal');
 
@@ -15,7 +15,7 @@ test('test created role has correct metadata', () => {
 
 test('test rules get added to role with no previous rules', () => {
     const role: V1Role = createRole(team, namespace)
-    const resourceType = 'resourceType'
+    const resourceType = 'pods'
     const resourceName = 'resourceName'
 
     let newRole = addResourceToRole(role, resourceType, resourceName)
@@ -26,7 +26,7 @@ test('test rules get added to role with no previous rules', () => {
 
 test('test rules get added to role with existing rules of same resourceType', () => {
     const role: V1Role = createRole(team, namespace)
-    const resourceType = 'resourceType'
+    const resourceType = 'pods'
     const firstResourceName = 'firstResourceName'
     const secondResourceName = 'secondResourceName'
 
@@ -40,8 +40,8 @@ test('test rules get added to role with existing rules of same resourceType', ()
 
 test('test rules get added to role with existing rules of different resourceType', () => {
     const role: V1Role = createRole(team, namespace)
-    const firstResourceType = 'firstResourceType'
-    const secondResourceType = 'secondResourceType'
+    const firstResourceType = 'pods'
+    const secondResourceType = 'configmaps'
     const resourceName = 'resourceName'
 
     let newRole = addResourceToRole(role, firstResourceType, resourceName)
@@ -55,7 +55,7 @@ test('test rules get added to role with existing rules of different resourceType
 
 test('test adding already existing rule changes nothing and return correct bool', () => {
     const role: V1Role = createRole(team, namespace)
-    const resourceType = 'resourceType'
+    const resourceType = 'pods'
     const resourceName = 'resourceName'
 
     let newRole = addResourceToRole(role, resourceType, resourceName)
@@ -70,7 +70,7 @@ test('test adding already existing rule changes nothing and return correct bool'
 })
 
 test('test removing resource from role', () => {
-    const resourceType = 'resourceType'
+    const resourceType = 'pods'
     const resourceName = 'resourceName'
     const resourceName2 = 'resourceName2'
     let role = createRole(team, namespace)
@@ -88,7 +88,7 @@ test('test removing resource from role', () => {
 })
 
 test('test removing last resource from role', () => {
-    const resourceType = 'resourceType'
+    const resourceType = 'pods'
     const resourceName = 'resourceName'
 
     let role = createRole(team, namespace)
@@ -100,8 +100,8 @@ test('test removing last resource from role', () => {
 })
 
 test('test removing resource from role when multiple resourceTypes', () => {
-    const resourceType = 'resourceType'
-    const resourceType2 = 'resourceType2'
+    const resourceType = 'pods'
+    const resourceType2 = 'configmaps'
     const resourceName = 'resourceName'
 
     let role = createRole(team, namespace)
@@ -113,4 +113,15 @@ test('test removing resource from role when multiple resourceTypes', () => {
     expect(role.rules).toHaveLength(1)
     expect(role.rules[0].resources[0]).toEqual(resourceType2)
     expect(role.rules[0].resourceNames[0]).toEqual(resourceName)
+})
+
+test('ruleTemplate applies correct apiGroup and verbs', () => {
+    const resourceName = 'resourceName'
+    let role = createRole(team, namespace)
+
+    for (let key in ruleTemplate) {
+        role = addResourceToRole(role, key, resourceName)
+        expect(role.rules[role.rules.length - 1].apiGroups).toEqual(ruleTemplate[key]['apiGroup'])
+        expect(role.rules[role.rules.length - 1].verbs).toEqual(ruleTemplate[key]['verbs'])
+    }
 })
