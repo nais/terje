@@ -1,6 +1,6 @@
 {
   "name": "TERJE",
-  "version": "3.2.14",
+  "version": "3.2.15",
   "repository": "github.com/navikt/terje",
   "license": "MIT",
   "dependencies": {
