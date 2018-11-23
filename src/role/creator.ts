@@ -20,13 +20,16 @@ export const ruleTemplate: { [key: string]: { apiGroup: string[], verbs: string[
     }
 }
 
-function createInitialPolicyRule(resourceType: string, resourceName: string): V1PolicyRule {
+export function createInitialPolicyRule(resourceType: string, resourceName: string): V1PolicyRule {
     let rule: V1PolicyRule = new V1PolicyRule()
 
     rule.apiGroups = ruleTemplate[resourceType]['apiGroup']
     rule.verbs = ruleTemplate[resourceType]['verbs']
-    rule.resources = [resourceType]
     rule.resourceNames = [resourceName]
+    rule.resources = [resourceType]
+    if (resourceType == 'pods') {
+        rule.resources.push('pods/exec')
+    }
 
     return rule
 }

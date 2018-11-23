@@ -1,6 +1,6 @@
 import { V1ObjectMeta, V1Role } from "@kubernetes/client-node";
 import { getResourceTypeFromSelfLink } from "../helpers";
-import { addResourceToRole, createRole } from "./creator";
+import { addResourceToRole, createRole, createInitialPolicyRule } from "./creator";
 import { add, del } from "./reducer";
 import { RoleState } from "./types";
 
@@ -9,18 +9,18 @@ const state: RoleState = { 'default': { 'aura': role } }
 const objectMeta: V1ObjectMeta = new V1ObjectMeta()
 objectMeta.name = "resourceName"
 objectMeta.namespace = "default"
-objectMeta.selfLink = "/api/v1/namespaces/default/pods/resourceName"
+objectMeta.selfLink = "/api/v1/namespaces/default/configmaps/resourceName"
 objectMeta.labels = { 'team': 'aura', 'managed-by': 'terje' }
 
 test('test adding resource to existing role', () => {
-    const expectedRole = addResourceToRole(Object.assign({}, role), 'pods', 'resourceName')
+    const expectedRole = addResourceToRole(Object.assign({}, role), 'configmaps', 'resourceName')
     const expectedState = { 'default': { 'aura': expectedRole } }
 
     expect(add(state, objectMeta)).toEqual(expectedState)
 })
 
 test('test adding resource to new role', () => {
-    const expectedRole = addResourceToRole(Object.assign({}, role), 'pods', 'resourceName')
+    const expectedRole = addResourceToRole(Object.assign({}, role), 'configmaps', 'resourceName')
     const expectedState = { 'default': { 'aura': expectedRole } }
 
     expect(add({}, objectMeta)).toEqual(expectedState)
@@ -36,7 +36,7 @@ test('test adding resource to new role when other role in same namespace already
         })
     })
 
-    const expectedRole = addResourceToRole(nonDefaultRole, 'pods', 'resourceName')
+    const expectedRole = addResourceToRole(nonDefaultRole, 'configmaps', 'resourceName')
     const expectedState = {
         'default': { 'aura': role },
         'nondefault': { 'aura': expectedRole },
@@ -68,4 +68,11 @@ test('test deleting non-existing resource does nothing', () => {
     const expectedState = Object.assign({}, stateWithRoleWithResources)
 
     expect(del(stateWithRoleWithResources, objectMeta)).toEqual(expectedState)
+})
+
+test('test creating pod rule creates pods/exec as well', () => {
+    const rule = createInitialPolicyRule("pods", "resourceName")
+
+    expect(rule.resources).toContain("pods")
+    expect(rule.resources).toContain("pods/exec")
 })

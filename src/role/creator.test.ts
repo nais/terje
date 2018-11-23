@@ -15,7 +15,7 @@ test('test created role has correct metadata', () => {
 
 test('test rules get added to role with no previous rules', () => {
     const role: V1Role = createRole(team, namespace)
-    const resourceType = 'pods'
+    const resourceType = 'applications'
     const resourceName = 'resourceName'
 
     let newRole = addResourceToRole(role, resourceType, resourceName)
@@ -26,7 +26,7 @@ test('test rules get added to role with no previous rules', () => {
 
 test('test rules get added to role with existing rules of same resourceType', () => {
     const role: V1Role = createRole(team, namespace)
-    const resourceType = 'pods'
+    const resourceType = 'applications'
     const firstResourceName = 'firstResourceName'
     const secondResourceName = 'secondResourceName'
 
@@ -40,7 +40,7 @@ test('test rules get added to role with existing rules of same resourceType', ()
 
 test('test rules get added to role with existing rules of different resourceType', () => {
     const role: V1Role = createRole(team, namespace)
-    const firstResourceType = 'pods'
+    const firstResourceType = 'applications'
     const secondResourceType = 'configmaps'
     const resourceName = 'resourceName'
 
@@ -55,7 +55,7 @@ test('test rules get added to role with existing rules of different resourceType
 
 test('test adding already existing rule changes nothing and return correct bool', () => {
     const role: V1Role = createRole(team, namespace)
-    const resourceType = 'pods'
+    const resourceType = 'applications'
     const resourceName = 'resourceName'
 
     let newRole = addResourceToRole(role, resourceType, resourceName)
@@ -70,7 +70,7 @@ test('test adding already existing rule changes nothing and return correct bool'
 })
 
 test('test removing resource from role', () => {
-    const resourceType = 'pods'
+    const resourceType = 'applications'
     const resourceName = 'resourceName'
     const resourceName2 = 'resourceName2'
     let role = createRole(team, namespace)
@@ -88,7 +88,7 @@ test('test removing resource from role', () => {
 })
 
 test('test removing last resource from role', () => {
-    const resourceType = 'pods'
+    const resourceType = 'applications'
     const resourceName = 'resourceName'
 
     let role = createRole(team, namespace)
@@ -100,7 +100,7 @@ test('test removing last resource from role', () => {
 })
 
 test('test removing resource from role when multiple resourceTypes', () => {
-    const resourceType = 'pods'
+    const resourceType = 'applications'
     const resourceType2 = 'configmaps'
     const resourceName = 'resourceName'
 
