@@ -1,3 +1,6 @@
+# DEPRECATED
+Replaced by [ToBAC](https://github.com/nais/tobac)
+
 # TERJE (Tremendously Effortless Rbac-Joiner Extension)
 Operator that creates RBAC roles and rolebinding based on kubernetes resource labels.
 
