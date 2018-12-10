@@ -10,20 +10,22 @@ function k {
 
 echo "#!/bin/sh"
 
+k --namespace nais delete deploy terje
+k --namespace nais delete secret terje
 k delete clusterrole nais:team
 k delete clusterrole terje
 k delete clusterrolebinding terje
 k delete clusterrolebinding view:terje
 
-crb=`kubectl get clusterrolebinding | grep -E "^nais:team" | awk '{print $1}'`
+crb=`kubectl get clusterrolebinding -l "managed-by=terje" -o jsonpath="{.items[*].metadata.name}"`
 for b in $crb; do
     k delete clusterrolebinding $b
 done
 
-namespaces=`kubectl get namespace -l "terje=enabled" | awk '{print $1}'`
+namespaces=`kubectl get namespace -l "terje=enabled" -o jsonpath="{.items[*].metadata.name}"`
 for ns in $namespaces; do
-    roles=`kubectl get role --namespace $ns | grep -E "^nais:team" | awk '{print $1}'`
-    rolebindings=`kubectl get rolebinding --namespace $ns | grep -E "^nais:team" | awk '{print $1}'`
+    roles=`kubectl get role --namespace $ns -l "managed-by=terje" -o jsonpath="{.items[*].metadata.name}"`
+    rolebindings=`kubectl get rolebinding --namespace $ns -l "managed-by=terje" -o jsonpath="{.items[*].metadata.name}"`
     for r in $roles; do
         k delete --namespace $ns role $r
     done
