@@ -9,7 +9,7 @@
     "adal-node": "^0.1.28",
     "deep-equal": "^1.0.1",
     "express": "^4.16.4",
-    "https-proxy-agent": "^2.2.1",
+    "https-proxy-agent": "^2.2.3",
     "pino": "^5.8.1",
     "prom-client": "^11.2.0",
     "redux": "^4.0.1",
